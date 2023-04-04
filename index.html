@@ -5,7 +5,21 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <button id="btn">Open 2nd window</button>
+    <div id="splash" class="scrn" style="background-color: #0989EC;">
+      <div id="splashLogo" style="width: 75%; height: 75%; position: absolute; left: 12.5%; top: 12.5%; background-image: url('./assets/logo.png'); background-position: center; background-repeat: no-repeat; background-size: contain; animation-name: splash; animation-duration: 0.75s; animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0, 0.75, 1);"></div>
+    </div>
+    <div id="homeScrn" class="scrn" hidden>
+      <div style="width: 100%; height: 75px; position: fixed; top: 0%; left: 0%; background-image: linear-gradient(#0989EC, #0989EC, #0989EC, white); text-align: center; font-size: 30; color: white; line-height: 62.5px;">
+        <b>Home Screen</b>
+        <div id="navBtn" onclick="navOpen()" style="position: fixed; height: 30px; width: auto; left: 15px; top: 15px;">
+          <img src="./assets/menu.png" style="height: 100%;">
+        </div>
+      </div>
+      <div id="navBarrier" onclick="navClose()" style="width: 100%; height: 100%; position: fixed; left: 0%; top: 0%; background-color: rgba(0, 0, 0, 0.5); opacity: 50%;" hidden></div>
+      <div id="navDiv" style="width: 75%; height: 100%; position: fixed; left: -75%; top: 0%; background-color: #0989EC;">
+        <button onclick="navClose()" style="position: absolute; top: 15px; right: 15px; background-color: red;">X</button>
+      </div>
+    </div>
   </body>
   <script src="code.js"></script>
 </html>
