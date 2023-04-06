@@ -1,3 +1,5 @@
+//Setup
+localStorage.removeItem("username")
 //Login
 var profPic
 document.getElementById("profilePicInp").oninput = function() {
