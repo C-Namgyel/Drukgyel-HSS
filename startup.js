@@ -13,7 +13,9 @@ if ("username" in localStorage == true) {
 } else {
     document.location.href = "../login/login.html";
 }
-var userInfo = JSON.parse(localStorage.username)
+console.log(localStorage["Drukgyel-HSS-User"])
+var userInfo = JSON.parse(localStorage["Drukgyel-HSS-User"])
+console.log(userInfo)
 document.getElementById("profilePic").style.backgroundImage = "url('"+userInfo.pic+"')"
 document.getElementById("profileName").innerHTML = userInfo.username
 document.getElementById("profileEmail").innerHTML = userInfo.email

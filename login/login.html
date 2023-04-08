@@ -3,6 +3,7 @@
     <title>Drukgyel HSS Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../style.css">
+    <link rel="icon" type="image/x-icon" href="../assets/logo.png">
   </head>
   <body>
     <div id="loginScrn" class="scrn">
@@ -10,14 +11,14 @@
         <b>Login</b>
       </div>
       <div style="text-align: center; width: 100%; position: absolute; left: 0%; top: 100px;">
-        <button onclick="document.getElementById('profilePicInp').click()"><input id="profilePicInp" type="file" accept="image/*" style="display: none;">Select Profile Picture</button><br>
-          <div id="profilePic" style="height: 50px; width: 50px; overflow: hidden; border-radius: 100%; background-image: url(); background-position: center; background-repeat: no-repeat; background-size: cover; transform: translateX(-50%); position: relative; left: 50%;"></div><br>
-        <input type="text" placeholder="Username" id="username"><br>
-        <input type="email" placeholder="Email" id="email"><br>
+        <button onclick="document.getElementById('profilePicInp').click()"><input id="profilePicInp" type="file" accept="image/*" style="display: none;">Select Profile Picture</button><br><br>
+        <div id="profilePic" style="height: 50px; width: 50px; overflow: hidden; border-radius: 100%; background-image: url(); background-position: center; background-repeat: no-repeat; background-size: cover; transform: translateX(-50%); position: relative; left: 50%;"></div><br>
+        <input type="text" placeholder="Username" id="username"><br><br>
+        <input type="email" placeholder="Email" id="email"><br><br>
         <button id="loginBtn">Login</button>
       </div>
     </div>
   </body>
   <script src="../function.js"></script>
-  <script src="code.js"></script>
+  <script src="code.js" type="module"></script>
 </html>

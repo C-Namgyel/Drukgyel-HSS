@@ -1,28 +1,57 @@
+//Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-analytics.js";
+  import { getDatabase, ref as dbRef, set } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-database.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.19.1/firebase-storage.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyBUSb8D9xWqda-FGEVfTeEokSMTawyCrFI",
+    authDomain: "drukgyel-hss.firebaseapp.com",
+    databaseURL: "https://drukgyel-hss-default-rtdb.firebaseio.com",
+    projectId: "drukgyel-hss",
+    storageBucket: "drukgyel-hss.appspot.com",
+    messagingSenderId: "930189749346",
+    appId: "1:930189749346:web:22152d4d206ecd6b4ef53b",
+    measurementId: "G-D1QK09ZJEN"
+  };
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+const database = getDatabase()
+const storage = getStorage(app);
+const storageRef = ref(storage);
 //Setup
-localStorage.removeItem("username")
+localStorage.removeItem("Drukgyel-HSS-User")
 //Login
 var profPic
 document.getElementById("profilePicInp").oninput = function() {
-    if (this.files[0].size / 1024 < 5120) {
-        let fReader = new FileReader();
-        fReader.onload = function() {
-            profPic = fReader.result
-            document.getElementById("profilePic").style.backgroundImage = "url('"+profPic+"')"
-        };
-        let file = this.files[0]
-        fReader.readAsDataURL(file);
-    } else {
-        alert("Image size too big!\nNote that this limit is only while it is being developed and will be removed when the app completed")
-    }
+    profPic = this.files[0]
+    let objURL = URL.createObjectURL(profPic)
+    document.getElementById("profilePic").style.backgroundImage = "url('"+objURL+"')";
 }
 document.getElementById("loginBtn").onclick = function() {
-    localStorage.username = JSON.stringify(
-        {
+  let btn = document.getElementById("loginBtn")
+  btn.disabled = true;
+  let storageRef = ref(storage, document.getElementById("email").value + "/" + profPic.name);
+  btn.innerHTML = ("Profile picture upload started")
+  uploadBytes(storageRef, profPic).then((snapshot) => {
+    btn.innerHTML = ("Profile Picture Uploaded<br>Creating Account")
+    getDownloadURL(storageRef).then((Url) => {
+        console.log(Url)
+        btn.innerHTML = ("Creating Account")
+        set(dbRef(database, "users/" + document.getElementById("username").value), {
             username: document.getElementById("username").value,
             email: document.getElementById("email").value,
-            pic: profPic,
-            type: "DHSS-Attendance"
-        }
-    )
-    setWindow("../home/home.html")
+            pic : Url
+        }).then(() => {
+            localStorage["Drukgyel-HSS-User"] = JSON.stringify(
+                {
+                    username: document.getElementById("username").value,
+                    email: document.getElementById("email").value,
+                    type: "DHSS-Attendance",
+                    pic: Url
+                }
+            )
+            setWindow("../home/home.html")
+        });
+    })
+  });
 }

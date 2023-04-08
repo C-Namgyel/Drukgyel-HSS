@@ -3,6 +3,7 @@
     <title>Drukgyel HSS</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="./assets/logo.png">
   </head>
   <body>
     <div id="splash" class="scrn" style="background-color: #0989EC;">
@@ -12,9 +13,9 @@
   <script>
 document.getElementById("splashLogo").onanimationend = function() {
     setTimeout(function() {
-        if ("username" in localStorage == true) {
+        if ("Drukgyel-HSS-User" in localStorage == true) {
             try {
-                let user = JSON.parse(localStorage.username)
+                let user = JSON.parse(localStorage["Drukgyel-HSS-User"])
                 if (user.type == "DHSS-Attendance") {
                     window.open("home/home.html", "_self")
                 } else {
