@@ -28,30 +28,34 @@ document.getElementById("profilePicInp").oninput = function() {
     document.getElementById("profilePic").style.backgroundImage = "url('"+objURL+"')";
 }
 document.getElementById("loginBtn").onclick = function() {
-  let btn = document.getElementById("loginBtn")
-  btn.disabled = true;
-  let storageRef = ref(storage, document.getElementById("email").value + "/" + profPic.name);
-  btn.innerHTML = ("Profile picture upload started")
-  uploadBytes(storageRef, profPic).then((snapshot) => {
-    btn.innerHTML = ("Profile Picture Uploaded<br>Creating Account")
-    getDownloadURL(storageRef).then((Url) => {
-        console.log(Url)
-        btn.innerHTML = ("Creating Account")
-        set(dbRef(database, "users/" + document.getElementById("username").value), {
-            username: document.getElementById("username").value,
-            email: document.getElementById("email").value,
-            pic : Url
-        }).then(() => {
-            localStorage["Drukgyel-HSS-User"] = JSON.stringify(
-                {
-                    username: document.getElementById("username").value,
-                    email: document.getElementById("email").value,
-                    type: "DHSS-Attendance",
-                    pic: Url
-                }
-            )
-            setWindow("../home/home.html")
-        });
-    })
-  });
+  if (document.getElementById("username").value.trim() != "" && document.getElementById("email").value.trim() != "" && document.getElementById("username").files != undefined) {
+    let btn = document.getElementById("loginBtn")
+    btn.disabled = true;
+    let storageRef = ref(storage, document.getElementById("email").value + "/" + profPic.name);
+    btn.innerHTML = ("Profile picture upload started")
+    uploadBytes(storageRef, profPic).then((snapshot) => {
+      btn.innerHTML = ("Profile Picture Uploaded<br>Creating Account")
+      getDownloadURL(storageRef).then((Url) => {
+          console.log(Url)
+          btn.innerHTML = ("Creating Account")
+          set(dbRef(database, "users/" + document.getElementById("username").value), {
+              username: document.getElementById("username").value,
+              email: document.getElementById("email").value,
+              pic : Url
+          }).then(() => {
+              localStorage["Drukgyel-HSS-User"] = JSON.stringify(
+                  {
+                      username: document.getElementById("username").value,
+                      email: document.getElementById("email").value,
+                      type: "DHSS-Attendance",
+                      pic: Url
+                  }
+              )
+              setWindow("../home/home.html")
+            });
+        })
+    });
+  } else {
+    alert("Please fill up all the spaces and also add a profile picture to login")
+  }
 }
