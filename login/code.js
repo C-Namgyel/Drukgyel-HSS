@@ -18,8 +18,6 @@ const analytics = getAnalytics(app);
 const database = getDatabase()
 const storage = getStorage(app);
 const storageRef = ref(storage);
-//Setup
-localStorage.removeItem("Drukgyel-HSS-User")
 //Login
 var profPic
 document.getElementById("profilePicInp").oninput = function() {
