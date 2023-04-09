@@ -28,7 +28,7 @@ document.getElementById("profilePicInp").oninput = function() {
     document.getElementById("profilePic").style.backgroundImage = "url('"+objURL+"')";
 }
 document.getElementById("loginBtn").onclick = function() {
-  if (document.getElementById("username").value.trim() != "" && document.getElementById("email").value.trim() != "" && document.getElementById("username").files != undefined) {
+  if (document.getElementById("username").value.trim() != "" && document.getElementById("email").value.trim() != "" && document.getElementById("profilePicInp").files[0] != undefined) {
     let btn = document.getElementById("loginBtn")
     btn.disabled = true;
     let storageRef = ref(storage, document.getElementById("email").value + "/" + profPic.name);
