@@ -27,7 +27,9 @@ function setScreen(id) {
     }
 }
 function setWindow(dir) {
-    window.open(dir, "_self")
+    setTimeout(function() {
+        window.open(dir, "_self")
+    }, 0)
 }
 function getBase64Image(img) {
     var canvas = document.createElement("canvas");
