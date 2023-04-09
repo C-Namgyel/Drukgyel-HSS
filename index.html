@@ -13,21 +13,7 @@
   <script>
 document.getElementById("splashLogo").onanimationend = function() {
     setTimeout(function() {
-        if ("Drukgyel-HSS-User" in localStorage == true) {
-            try {
-                let user = JSON.parse(localStorage["Drukgyel-HSS-User"])
-                if (user.type == "DHSS-Attendance") {
-                    window.open("home/home.html", "_self")
-                } else {
-                    window.open("login/login.html", "_self")
-                }
-            }
-            catch {
-                window.open("login/login.html", "_self")
-            }
-        } else {
-            window.open("login/login.html", "_self")
-        }
+      window.open("home/home.html", "_self")
     }, 1000)
 }
   </script>

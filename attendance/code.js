@@ -1,20 +1,3 @@
-/*var classes = []
-var secs = ["A", "B", "C", "D", "E"]
-for (let c = 12; c >= 7; c--) {
-    if (c == 7 || c == 8) {
-        for (let s = 0; s < 3; s++) {
-            classes.push({class: c + " " + secs[s]})
-        }
-    } else {
-        for (let s = 0; s < 5; s++) {
-            classes.push({class: c + " " + secs[s]})
-        }
-    }
-}
-console.log(classes)
-console.log(JSON.stringify(classes))
-//Append
-*/
 var classes = [
     {"class":"12 A", link: "https://tinyurl.com/3pcez7rs"},
     {"class":"12 B", link: "https://tinyurl.com/t3u3yfsr"},
