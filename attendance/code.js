@@ -28,5 +28,5 @@ var classes = [
 ]
 //Append
 for (let a = 0; a < classes.length; a++) {
-    document.getElementById("classListHolder").innerHTML += '<button onclick="window.open(\''+classes[a].link+'\', \'_self\')" style="margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 30px;">' + classes[a].class+ '</button>'
+    document.getElementById("classListHolder").innerHTML += '<button onclick="window.open(\''+classes[a].link+'\', \'_blank\')" style="margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 30px;">' + classes[a].class+ '</button>'
 }
