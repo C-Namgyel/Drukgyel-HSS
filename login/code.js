@@ -17,7 +17,6 @@ const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 const database = getDatabase()
 const storage = getStorage(app);
-const storageRef = ref(storage);
 //Login
 var profPic
 document.getElementById("profilePicInp").oninput = function() {

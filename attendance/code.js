@@ -28,5 +28,13 @@ var classes = [
 ]
 //Append
 for (let a = 0; a < classes.length; a++) {
-    document.getElementById("classListHolder").innerHTML += '<button onclick="window.open(\''+classes[a].link+'\', \'_blank\')" style="margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 30px;">' + classes[a].class+ '</button>'
+    let btn = document.createElement("button")
+    btn.style = "margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 30px;"
+    btn.id = "attendanceBtn" + a
+    btn.innerHTML = classes[a].class;
+    document.getElementById("classListHolder").appendChild(btn)
+    btn.onclick = function() {
+        window.open(classes[a].link, "_blank")
+        location.href = ("../home/home.html")
+    }
 }
