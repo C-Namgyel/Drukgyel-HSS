@@ -40,7 +40,7 @@ for (let a = 0; a < classes.length; a++) {
     btn.onclick = function() {
         aElem.click()
         setTimeout(function() {
-            location.href = ("../home/home.html")
+            window.open("../home/home.html", "_self")
         },1)
     }
 }
