@@ -32,9 +32,15 @@ for (let a = 0; a < classes.length; a++) {
     btn.style = "margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 30px;"
     btn.id = "attendanceBtn" + a
     btn.innerHTML = classes[a].class;
+    let aElem = document.createElement("a")
+    aElem.href = classes[a].link;
+    aElem.target = "_blank"
+    btn.appendChild(aElem)
     document.getElementById("classListHolder").appendChild(btn)
     btn.onclick = function() {
-        window.open(classes[a].link, "_blank")
-        location.href = ("../home/home.html")
+        aElem.click()
+        setTimeout(function() {
+            location.href = ("../home/home.html")
+        },1)
     }
 }
