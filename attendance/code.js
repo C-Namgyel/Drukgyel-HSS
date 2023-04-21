@@ -31,19 +31,10 @@ for (let a = 0; a < classes.length; a++) {
     let btn = document.createElement("button")
     btn.style = "margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 30px;"
     btn.id = "attendanceBtn" + a
-    let aElem = document.createElement("a")
-    aElem.href = classes[a].link;
-    aElem.target = "_blank"
-    aElem.innerHTML = classes[a].class;
-    aElem.style.textDecoration = "none"
-    aElem.style.color = "white"
-    aElem.style.display = "inline-block"
-    aElem.style.width = "100%"
-    aElem.onclick = function() {
-        let r = document.createElement("a")
-        r.href = "https://c-namgyel.github.io/Drukgyel-HSS/home/home.html"
-        r.click();
-    }
-    btn.appendChild(aElem)
+    btn.innerHTML = classes[a].class;
     document.getElementById("classListHolder").appendChild(btn)
+    btn.onclick = function() {
+        window.open(classes[a].link, "_blank")
+        location.href = ("../home/home.html")
+    }
 }
