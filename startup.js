@@ -1,7 +1,7 @@
 //Start
 if ("Drukgyel-HSS" in sessionStorage == false) {
     sessionStorage["Drukgyel-HSS"] = location.href
-    location.href = ("../index.html")
+    location.href = ("../")
 }
 //Setup
 var navList = [
@@ -16,7 +16,7 @@ for (let d = 0; d < navList.length; d++) {
     a.target = "_self"
     a.style="text-decoration: none; display: flex; align-items: center;"
     if (location.href.split("/")[location.href.split("/").length - 2] != navList[d].label.replaceAll(" ", "+") && location.href.split("/")[location.href.split("/").length - 2] != navList[d].label.replaceAll(" ", "%20")) {
-        a.href = "../"+navList[d].label+"/index.html"
+        a.href = "../"+navList[d].label
     } else {
         a.href = "#"
         a.onclick = function() {
