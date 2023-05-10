@@ -1,24 +1,3 @@
-/*if ("username" in localStorage == true) {
-    try {
-        let user = JSON.parse(localStorage.username)
-        if (user.type == "DHSS-Attendance") {
-            //
-        } else {
-            document.location.href = "../login/login.html";
-        }
-    }
-    catch {
-        document.location.href = "../login/login.html";
-    }
-} else {
-    document.location.href = "../login/login.html";
-}
-console.log(localStorage["Drukgyel-HSS-User"])
-var userInfo = JSON.parse(localStorage["Drukgyel-HSS-User"])
-console.log(userInfo)
-document.getElementById("profilePic").style.backgroundImage = "url('"+userInfo.pic+"')"
-document.getElementById("profileName").innerHTML = userInfo.username
-document.getElementById("profileEmail").innerHTML = userInfo.email*/
 var navList = [
     {label: "School Profile", logo: "../assets/home.svg"},
     {label: "About School", logo: "../assets/home.svg"},
@@ -31,7 +10,7 @@ for (let d = 0; d < navList.length; d++) {
     a.target = "_self"
     a.style="text-decoration: none; display: flex; align-items: center;"
     if (location.href.split("/")[location.href.split("/").length - 2] != navList[d].label.replaceAll(" ", "+") && location.href.split("/")[location.href.split("/").length - 2] != navList[d].label.replaceAll(" ", "%20")) {
-        a.href = "../"+navList[d].label+"/index.html"
+        a.href = "../"+navList[d].label
     } else {
         a.href = "#"
         a.onclick = function() {
