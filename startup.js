@@ -2,7 +2,7 @@ var navList = [
     {label: "School Profile", logo: "../assets/home.svg"},
     {label: "About School", logo: "../assets/home.svg"},
     {label: "Class Attendance", logo: "../assets/record.svg"},
-    {label: "School Profile", logo: "../assets/book.svg"},
+    {label: "Staff Photo", logo: "../assets/book.svg"},
     {label: "About", logo: "../assets/about.svg"},
 ]
 for (let d = 0; d < navList.length; d++) {
