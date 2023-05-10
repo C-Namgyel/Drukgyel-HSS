@@ -13,7 +13,12 @@
   <script>
 document.getElementById("splashLogo").onanimationend = function() {
     setTimeout(function() {
-      window.open("School Profile", "_self")
+      if ("Drukgyel-HSS" in sessionStorage == false) {
+        sessionStorage["Drukgyel-HSS"] = "index"
+        window.open("School Profile/index.html", "_self")
+      } else {
+        window.open(sessionStorage["Drukgyel-HSS"], "_self")
+      }
     }, 1000)
 }
   </script>
