@@ -35,6 +35,6 @@ for (let a = 0; a < classes.length; a++) {
     document.getElementById("classListHolder").appendChild(btn)
     btn.onclick = function() {
         window.open(classes[a].link, "_blank")
-        location.href = ("../home/home.html")
+        location.href = ("../School Profile")
     }
 }
