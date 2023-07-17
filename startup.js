@@ -1,7 +1,17 @@
 //Start
 if ("Drukgyel-HSS" in sessionStorage == false) {
-    sessionStorage["Drukgyel-HSS"] = location.href
-    location.href = ("../")
+    let div = document.createElement("div")
+    div.style = "position: fixed; width: 100%; height: 100%; left: 0%; top: 0%; background-color: #0989EC; z-index: 100;"
+    document.body.appendChild(div)
+    let img = document.createElement("div")
+    div.appendChild(img)
+    img.style = "width: 75%; height: 75%; position: absolute; left: 12.5%; top: 12.5%; background-image: url(\'../assets/logo.png\'); background-position: center; background-repeat: no-repeat; background-size: contain; animation-name: splash; animation-duration: 0.75s; animation-fill-mode: forwards; animation-timing-function: cubic-bezier(0, 0.75, 1);"
+    img.onanimationend = function() {
+        setTimeout(function() {
+            div.remove()
+        }, 1000)
+    }
+    sessionStorage["Drukgyel-HSS"] = true
 }
 //Setup
 var navList = [
@@ -16,7 +26,7 @@ for (let d = 0; d < navList.length; d++) {
     a.target = "_self"
     a.style="text-decoration: none; display: flex; align-items: center;"
     if (location.href.split("/")[location.href.split("/").length - 2] != navList[d].label.replaceAll(" ", "+") && location.href.split("/")[location.href.split("/").length - 2] != navList[d].label.replaceAll(" ", "%20")) {
-        a.href = "../"+navList[d].label
+        a.href = "../"+navList[d].label+"/index.html"
     } else {
         a.href = "#"
         a.onclick = function() {
