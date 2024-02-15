@@ -2,6 +2,7 @@
 <html>
   <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Page Not Found</title>
     <style>
       body {
@@ -14,14 +15,18 @@
         font-size: 36px;
         color: #333;
         margin-bottom: 20px;
+        width: 100%;
+        text-align: center;
       }
       p {
         font-size: 18px;
         color: #666;
         margin-bottom: 20px;
+        width: 100%;
+        text-align: center;
       }
       img {
-        max-width: 400px;
+        width: 75%;
         margin-bottom: 20px;
       }
       a {
@@ -31,13 +36,18 @@
       }
     </style>
   </head>
-  <body>
-    <img src="./assets/logo.png" alt="404 Error">
+  <body style="scroll-behavior: smooth; overflow: auto; overflow-wrap: break-word;">
+    <img src="https://c-namgyel.github.io/Drukgyel-HSS/assets/logo.png" alt="404 Error">
     <h1>Oops! Page Not Found</h1>
     <p>The page you are looking for might have been removed or doesn't exist.</p>
-    <p>Let's go back to the <a href="./School Profile">homepage</a> and start over.</p>
+    <p id="linkA">Let's go back to the <a href="./">homepage</a> and start over.</p>
   </body>
   <script>
     sessionStorage.removeItem("Drukgyel-HSS")
+    document.body.onload = function() {
+      setTimeout(function() {
+        document.getElementById("linkA").scrollIntoView()
+      }, 1)
+    }
   </script>
 </html>
