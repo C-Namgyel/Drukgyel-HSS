@@ -1,10 +1,3 @@
-// TODO
-/*
-Delete feature should be turned off after an hour of posting.
-Make the GUI a little better with stylings.
-*/
-
-
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -12,14 +5,14 @@ import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.c
 import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBUSb8D9xWqda-FGEVfTeEokSMTawyCrFI",
-    authDomain: "drukgyel-hss.firebaseapp.com",
-    databaseURL: "https://drukgyel-hss-default-rtdb.firebaseio.com",
-    projectId: "drukgyel-hss",
-    storageBucket: "drukgyel-hss.appspot.com",
-    messagingSenderId: "930189749346",
-    appId: "1:930189749346:web:22152d4d206ecd6b4ef53b",
-    measurementId: "G-D1QK09ZJEN"
+    apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
+    authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
+    databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
+    projectId: "drukgyel-hss-4a7f7",
+    storageBucket: "drukgyel-hss-4a7f7.appspot.com",
+    messagingSenderId: "728432489451",
+    appId: "1:728432489451:web:83f9979d39672748df9fae",
+    measurementId: "G-RB5MMY67QV"
 };
 
 // Initialize Firebase
@@ -56,7 +49,6 @@ function writeData(path, data, code) {
         code();
     });
 };
-
 function deleteData(path, code) {
     remove(ref(database, path)).then(() => {
         code()
