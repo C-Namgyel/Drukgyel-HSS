@@ -1,3 +1,10 @@
+// TODO
+/*
+Delete feature should be turned off after an hour of posting.
+Make the GUI a little better with stylings.
+*/
+
+
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -5,15 +12,25 @@ import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.c
 import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
-    authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
-    databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
-    projectId: "drukgyel-hss-4a7f7",
-    storageBucket: "drukgyel-hss-4a7f7.appspot.com",
-    messagingSenderId: "728432489451",
-    appId: "1:728432489451:web:83f9979d39672748df9fae",
-    measurementId: "G-RB5MMY67QV"
+    apiKey: "AIzaSyBUSb8D9xWqda-FGEVfTeEokSMTawyCrFI",
+    authDomain: "drukgyel-hss.firebaseapp.com",
+    databaseURL: "https://drukgyel-hss-default-rtdb.firebaseio.com",
+    projectId: "drukgyel-hss",
+    storageBucket: "drukgyel-hss.appspot.com",
+    messagingSenderId: "930189749346",
+    appId: "1:930189749346:web:22152d4d206ecd6b4ef53b",
+    measurementId: "G-D1QK09ZJEN"
 };
+// const firebaseConfig = {
+//     apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
+//     authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
+//     databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
+//     projectId: "drukgyel-hss-4a7f7",
+//     storageBucket: "drukgyel-hss-4a7f7.appspot.com",
+//     messagingSenderId: "728432489451",
+//     appId: "1:728432489451:web:83f9979d39672748df9fae",
+//     measurementId: "G-RB5MMY67QV"
+// };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -163,6 +180,12 @@ function dateInput(holder) {
     holder.appendChild(document.createElement("br"));
     return(date)
 }
+function redDot(parent, x, y) {
+    let div = document.createElement("div")
+    div.style = `background-color: red; position: absolute; left: ${x}; top: ${y}; border-radius: 100%; width: 3vw; height: 3vw;`;
+    parent.appendChild(div)
+    return(div)
+}
 
 // Setup startup screen
 function startup() {
@@ -198,6 +221,17 @@ function startup() {
             }
         }
         createUID()
+    } else {
+        let users = data.users;
+        let uid = localStorage.userId
+        if ((uid in users) == false || users == undefined) {
+            writeData(`startup/users/${uid}`, "", function() {
+                if (users == undefined) {
+                    users = {}
+                }
+                users[uid] = ""
+            })
+        }
     }
 }
 
@@ -209,6 +243,7 @@ var dataStorage = {
     inCampusLeaves: {},
     studyReports: {}
 }
+var menuRedDot = undefined;
 
 // Splash Screen
 var splash = false;
@@ -255,12 +290,32 @@ getData("startup", function (res) {
     txt += `Total Students: ${parseInt(schoolProfile["Boys"]) + parseInt(schoolProfile["Girls"])} [Boarders: ${schoolProfile["Boarders"]} & Day Scholars: ${schoolProfile["Day Scholars"]}] [Boys: ${schoolProfile["Boys"]} & Girls: ${schoolProfile["Girls"]}]<br>`;
     txt += `Total Staff: ${parseInt(schoolProfile["Teachers"]) + parseInt(schoolProfile["Supporting Staffs"])} [Teachers: ${schoolProfile["Teachers"]} & Supporting Staffs: ${schoolProfile["Supporting Staffs"]}]`;
     document.getElementById("schoolProfileA").innerHTML = txt;
-
+    
     // About
     document.getElementById("aboutDiv").innerHTML = data.aboutSchool.replaceAll("\n", "<br>");
 
+    // Staff Profile
+    if (Object.keys(data.users).includes(localStorage.userId)) {
+        if (data.users[localStorage.userId] == "") {
+            staffProfileRedDot = redDot(document.getElementById("navDiv"), `5%`, `${document.getElementById("Staff Profile Btn").getBoundingClientRect().top}px`)
+            menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
+            staffProfileAddRedDot = redDot(document.getElementById("staffProfileBtn"), `15%`, `15%`);
+        }
+    }
+
     startup()
 });
+// getData(`announcements/${getTodayDate()}`, function(res) {
+//     if (res != undefined) {
+//         for (let t of Object.keys(res)) {
+//             if (localStorage.lastAnnouncement == undefined || parseInt(localStorage.lastAnnouncement) < parseInt(t)) {
+//                 if (menuRedDot == undefined) {
+                    
+//                 }
+//             }
+//         }
+//     }
+// })
 
 // Setup the navigation drawer;
 var navList = [
@@ -282,7 +337,7 @@ for (let d = 0; d < navList.length; d++) {
     a.value = navList[d].label;
     a.id = navList[d]["label"] + " Btn";
     let img = document.createElement("img");
-    img.style = "height: 25px";
+    img.style = "height: 5vw";
     img.src = navList[d].logo;
     a.appendChild(img);
     a.innerHTML += "&nbsp;&nbsp;&nbsp;";
@@ -297,307 +352,15 @@ for (let d = 0; d < navList.length; d++) {
         if (setScreen(val) == true) {
             // Load Datas and display in screen
             if (val == "Announcements") {
-                let dateToday = document.getElementById("announcementFilter").value;
-                function startIt(dT) {
-                    let toLoad = {}
-                    toLoad[dT] = dataStorage.announcements[dT];
-                    listLoad(toLoad, "announcementDiv", function(div, x, y) {
-                        div.innerHTML = `<b style="font-size: 5vw; display: block;">${dataStorage.announcements[y][x].name}</b>
-                        <b style="font-size: 4vw;">To: ${dataStorage.announcements[y][x].to}</b>
-                        <a style="float: right; font-size: 4vw; color: #555;">${getTime(x)}</a>
-                        <hr style="width: 100%;">
-                        <b style="display: block; font-size: 5vw; margin-top: 10px;">${dataStorage.announcements[y][x].heading}</b><br>
-                        <a style="font-size: 4vw; color: blue;">Click to open full announcement</a>`;
-                        if (dataStorage.announcements[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
-                            let delBtn = document.createElement("button");
-                            delBtn.id = x;
-                            delBtn.innerHTML = "Delete Announcement";
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(delBtn)
-                            delBtn.onclick = function() {
-                                let conf = confirm("Are you sure you want to delete this announcement?")
-                                if (conf == true) {
-                                    delBtn.disabled = true;
-                                    delBtn.innerHTML = "Deleting"
-                                    deleteData(`announcements/${y}/${x}`, function() {
-                                        delete dataStorage["announcements"][y][x];
-                                        if (Object.keys(dataStorage["announcements"][y]).length == 0) {
-                                            delete dataStorage["announcements"][y];
-                                        };
-                                        document.getElementById("Announcements Btn").click()
-                                    })
-                                };
-                            }
-                        }
-                    }, function(e, x, y, f, event) {
-                        e.innerHTML = `From ${dataStorage.announcements[y][x].name} at ${getTime(x)}<br><br>To ${dataStorage.announcements[y][x].to}<br><br>Heading:  ${dataStorage.announcements[y][x].heading}<br><br>${dataStorage.announcements[y][x].message.replaceAll("\n", "<br>")}`
-                        if (event.target.id == x) {
-                            f.click()
-                        }
-                    });
-                }
-                if (Object.keys(dataStorage.announcements).includes(dateToday)) {
-                    startIt(dateToday);
-                } else {
-                    document.getElementById("announcementDiv").innerHTML = "Getting Data. Please wait."
-                    getData(`announcements/${dateToday}`, function(res) {
-                        if (Object.keys(res).length != 0) {
-                            dataStorage.announcements[dateToday] = res;
-                            startIt(dateToday);
-                        } else {
-                            dataStorage.announcements[dateToday] = {};
-                            document.getElementById("announcementDiv").innerHTML = "<b>No Data</b>";
-                        }
-                    })
-                }
+                loadAnnouncements()
             } else if (val == "Casual Leave") {
-                let dateToday = document.getElementById("casualLeaveFilter").value;
-                function startIt(dT) {
-                    let toLoad = {}
-                    toLoad[dT] = dataStorage.casualLeaves[dT];
-                    listLoad(toLoad, "casualLeaveDiv", function(div, x, y) {
-                        div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${getTime(x)}</a>
-                        <b style="font-size: 5vw; display: block;">${dataStorage.casualLeaves[y][x].name}</b>
-                        <b style="font-size: 4vw;">Reason: ${dataStorage.casualLeaves[y][x].reason}</b>
-                        <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.casualLeaves[y][x].type}</b><br>
-                        <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
-                        if (dataStorage.casualLeaves[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
-                            let delBtn = document.createElement("button");
-                            delBtn.id = x;
-                            delBtn.innerHTML = "Cancel Leave";
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(delBtn)
-                            delBtn.onclick = function() {
-                                let conf = confirm("Are you sure you want to cancel your leave?")
-                                if (conf == true) {
-                                    delBtn.disabled = true;
-                                    delBtn.innerHTML = "Canceling"
-                                    deleteData(`casualLeaves/${y}/${x}`, function() {
-                                        delete dataStorage["casualLeaves"][y][x];
-                                        if (Object.keys(dataStorage["casualLeaves"][y]).length == 0) {
-                                            delete dataStorage["casualLeaves"][y];
-                                        };
-                                        document.getElementById("Casual Leave Btn").click()
-                                    })
-                                };
-                            }
-                        }
-                    }, function(e, x, y, f, event) {
-                        e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
-                        Name: ${dataStorage.casualLeaves[y][x].name}<hr>
-                        Type of Leave: ${dataStorage.casualLeaves[y][x].type}<hr>
-                        Duration: ${dataStorage.casualLeaves[y][x].duration}<hr>
-                        Start Date:  ${dataStorage.casualLeaves[y][x].startDate}<hr>
-                        End Date: ${dataStorage.casualLeaves[y][x].endDate}<hr>
-                        Reason: ${dataStorage.casualLeaves[y][x].reason}`
-                        if (event.target.id == x) {
-                            f.click()
-                        }
-                    });
-                };
-                if (Object.keys(dataStorage.casualLeaves).includes(dateToday)) {
-                    startIt(dateToday);
-                } else {
-                    document.getElementById("casualLeaveDiv").innerHTML = "Getting Data. Please wait."
-                    getData(`casualLeaves/${dateToday}`, function(res) {
-                        if (Object.keys(res).length != 0) {
-                            dataStorage.casualLeaves[dateToday] = res;
-                            startIt(dateToday);
-                        } else {
-                            dataStorage.casualLeaves[dateToday] = {};
-                            document.getElementById("casualLeaveDiv").innerHTML = "<b>No Data</b>";
-                        };
-                    })
-                }
+                loadCasualLeaves()
             } else if (val == "In Campus Leave") {
-                let dateToday = document.getElementById("campusLeaveFilter").value;
-                function startIt(dT) {
-                    let toLoad = {}
-                    toLoad[dT] = dataStorage.inCampusLeaves[dT];
-                    listLoad(toLoad, "campusLeaveDiv", function(div, x, y) {
-                        div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${dataStorage.inCampusLeaves[y][x].date} ${dataStorage.inCampusLeaves[y][x].time}</a>
-                        <b style="font-size: 5vw; display: block;">${dataStorage.inCampusLeaves[y][x].name}</b>
-                        <b style="font-size: 4vw;">Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}</b>
-                        <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.inCampusLeaves[y][x].period}</b><br>
-                        <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
-                        if (dataStorage.inCampusLeaves[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
-                            let delBtn = document.createElement("button");
-                            delBtn.id = x;
-                            delBtn.innerHTML = "Cancel Leave";
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(delBtn)
-                            delBtn.onclick = function() {
-                                let conf = confirm("Are you sure you want to cancel your leave?")
-                                if (conf == true) {
-                                    delBtn.disabled = true;
-                                    delBtn.innerHTML = "Canceling"
-                                    deleteData(`inCampusLeaves/${y}/${x}`, function() {
-                                        delete dataStorage["inCampusLeaves"][y][x];
-                                        if (Object.keys(dataStorage["inCampusLeaves"][y]).length == 0) {
-                                            delete dataStorage["inCampusLeaves"][y];
-                                        };
-                                        document.getElementById("In Campus Leave Btn").click()
-                                    })
-                                    .catch((error) => {
-                                        console.error("Error deleting data: ", error);
-                                    });
-                                };
-                            }
-                        }
-                    }, function(e, x, y, f, event) {
-                        e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
-                        Name: ${dataStorage.inCampusLeaves[y][x].name}<hr>
-                        Date and Time: ${dataStorage.inCampusLeaves[y][x].date} ${dataStorage.inCampusLeaves[y][x].time}<hr>
-                        Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}<hr>
-                        Period [From - To]:  ${dataStorage.inCampusLeaves[y][x].period}`
-                        if (event.target.id == x) {
-                            f.click()
-                        }
-                    });
-                }
-                if (Object.keys(dataStorage.inCampusLeaves).includes(dateToday)) {
-                    startIt(dateToday);
-                } else {
-                    document.getElementById("campusLeaveDiv").innerHTML = "Getting Data. Please wait."
-                    getData(`inCampusLeaves/${dateToday}`, function(res) {
-                        if (Object.keys(res).length != 0) {
-                            dataStorage.inCampusLeaves[dateToday] = res;
-                            startIt(dateToday);
-                        } else {
-                            dataStorage.inCampusLeaves[dateToday] = {};
-                            document.getElementById("campusLeaveDiv").innerHTML = "<b>No Data</b>";
-                        };
-                    })
-                }
+                loadInCampusLeaves()
             } else if (val == "Study Report") {
-                let dateToday = document.getElementById("studyReportFilter").value;
-                function startIt(dT) {
-                    let toLoad = {}
-                    toLoad[dT] = dataStorage.studyReports[dT];
-                    listLoad(toLoad, "studyReportDiv", function(div, x, y) {
-                        div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${getTime(x)}</a>
-                        <b style="font-size: 5vw; display: block;">${dataStorage.studyReports[y][x].teacher}</b>
-                        <b style="font-size: 4vw; color: #3A3B3C;">${dataStorage.studyReports[y][x].study}</b>
-                        <b style="display: block; font-size: 4vw; margin-top: 10px;">${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}</b><br>
-                        <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
-                        if (dataStorage.studyReports[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
-                            let delBtn = document.createElement("button");
-                            delBtn.id = x;
-                            delBtn.innerHTML = "Delete Report";
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(document.createElement("br"))
-                            div.appendChild(delBtn)
-                            delBtn.onclick = function() {
-                                let conf = confirm("Are you sure you want to delete this report?")
-                                if (conf == true) {
-                                    delBtn.disabled = true;
-                                    delBtn.innerHTML = "Deleting"
-                                    deleteData(`studyReports/${y}/${x}`, function() {
-                                        delete dataStorage["studyReports"][y][x];
-                                        if (Object.keys(dataStorage["studyReports"][y]).length == 0) {
-                                            delete dataStorage["studyReports"][y];
-                                        };
-                                        document.getElementById("Study Report Btn").click()
-                                    })
-                                };
-                            }
-                        }
-                    }, function(e, x, y, f, event) {
-                        e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
-                        ToD: ${dataStorage.studyReports[y][x].teacher}<hr>
-                        Study: ${dataStorage.studyReports[y][x].study}<hr>
-                        Date: ${dataStorage.studyReports[y][x].date}<hr>
-                        Absentee:<br>${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}`
-                        if (event.target.id == x) {
-                            f.click()
-                        }
-                    });
-                };
-                if (Object.keys(dataStorage.studyReports).includes(dateToday)) {
-                    startIt(dateToday);
-                } else {
-                    document.getElementById("studyReportDiv").innerHTML = "Getting Data. Please wait."
-                    getData(`studyReports/${dateToday}`, function(res) {
-                        if (Object.keys(res).length != 0) {
-                            dataStorage.studyReports[dateToday] = res;
-                            startIt(dateToday);
-                        } else {
-                            dataStorage.studyReports[dateToday] = {};
-                            document.getElementById("studyReportDiv").innerHTML = "<b>No Data</b>";
-                        }
-                    })
-                }
+                loadStudyReports()
             } else if (val == "Staff Profile") {
-                document.getElementById("staffProfileDiv").innerHTML = "";
-                document.getElementById("staffProfileDiv").appendChild(at)
-                let users = data.users;
-                if (users == undefined) {
-                    users = {}
-                    data.users = {};
-                }
-                for (let o of Object.keys(users)) {
-                    if (users[o] == "") {
-                        delete users[o];
-                    }
-                }
-                sortObject(users, "name", true)
-                if (Object.keys(users).length == 0) {
-                    let b = document.createElement("b")
-                    b.innerHTML = "No Data";
-                    document.getElementById("staffProfileDiv").insertBefore(b, document.getElementById("staffProfileDiv").firstChild);
-                } else {
-                    for (let s of Object.keys(users)) {
-                        if (users[s] != "") {
-                            let div = document.createElement("div");
-                            div.style = "width: 80%; background-color: white; border: 2px solid #ddd; border-radius: 3vw; padding: 5%; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);";
-                            document.getElementById("staffProfileDiv").insertBefore(div, document.getElementById("staffProfileDiv").firstChild);
-                            div.innerHTML = `<b style="font-size: 5vw; display: block;">${users[s].name}</b>
-                            <b style="font-size: 4vw;">Class Teacher of ${users[s].classTeacher}</b>
-                            <b style="display: block; font-size: 4vw; color: #3A3B3C;">${users[s].subject}</b><br>
-                            <a style="font-size: 4vw; color: blue;">Click to open more details</a>`;
-                            div.onclick = function(ev) {
-                                let elem = createPrompt()
-                                elem[0].style.backgroundColor = "white";
-                                elem[0].style.textAlign = "left";
-                                let con = `<div onclick="window.open('${users[s].profilePicture}', '_blank');" style="position: relative; left: 50%; transform: translateX(-50%); width: 30%; aspect-ratio: 1/1; border-radius: 100%; overflow: hidden; background-image: url('${users[s].profilePicture}'); background-position: center; background-repeat: no-repeat; background-size: cover;"></div><br>
-                                <b style="width: 100%; text-align: center; left: 0%; position: relative; display: inline-block;">${users[s].name}</b><br><br>
-                                Class Teacher of&nbsp;${users[s].classTeacher}<hr>
-                                Subject: ${users[s].subject}<hr>
-                                Currently Teaching Classes: ${users[s].classes}<hr>
-                                Phone Number: <a href='tel: ${users[s].phoneNumber}'>${users[s].phoneNumber}</a><hr>
-                                Email: <a href='mailto:${users[s].email}'>${users[s].email}</a>`
-                                elem[0].innerHTML = con;
-                                if (ev.target.id == s) {
-                                    elem[1].click();
-                                }
-                            };
-                            if (s == localStorage.userId) {
-                                let delBtn = document.createElement("button");
-                                delBtn.id = s;
-                                delBtn.innerHTML = "Delete Profile";
-                                div.appendChild(document.createElement("br"))
-                                div.appendChild(document.createElement("br"))
-                                div.appendChild(delBtn)
-                                delBtn.onclick = function() {
-                                    let conf = confirm("Are you sure you want to delete your profile?")
-                                    if (conf == true) {
-                                        delBtn.disabled = true;
-                                        delBtn.innerHTML = "Deleting"
-                                        deleteObject(stRef(storage, `staffProfile/${localStorage.userId}/Profile Picture`)).then(() => {
-                                            writeData(`startup/users/${localStorage.userId}`, "", function() {
-                                                data.users[localStorage.userId] = "";
-                                                document.getElementById("Staff Profile Btn").click()
-                                            })
-                                        });
-                                    };
-                                }
-                            }
-                        }
-                    }
-                }
+                loadStaffProfiles()
             };
             document.getElementById("header").innerHTML = val;
             if (document.getElementById("navBarrier").hidden == false) {
@@ -664,7 +427,6 @@ function listLoad(data, divElem, code, oncl) {
                     elem[0].style.backgroundColor = "white";
                     elem[0].style.textAlign = "left";
                     oncl(elem[0], x, y, elem[1], event)
-                    // event.target.click()
                 };
             }
             let date = document.createElement("b");
@@ -733,6 +495,62 @@ for (let a = 0; a < classes.length; a++) {
 };
 
 // Announcements
+function loadAnnouncements() {
+    let dateToday = document.getElementById("announcementFilter").value;
+    function startIt(dT) {
+        let toLoad = {}
+        toLoad[dT] = dataStorage.announcements[dT];
+        listLoad(toLoad, "announcementDiv", function(div, x, y) {
+            div.innerHTML = `<b style="font-size: 5vw; display: block;">${dataStorage.announcements[y][x].name}</b>
+            <b style="font-size: 4vw;">To: ${dataStorage.announcements[y][x].to}</b>
+            <a style="float: right; font-size: 4vw; color: #555;">${getTime(x)}</a>
+            <hr style="width: 100%;">
+            <b style="display: block; font-size: 5vw; margin-top: 10px;">${dataStorage.announcements[y][x].heading}</b><br>
+            <a style="font-size: 4vw; color: blue;">Click to open full announcement</a>`;
+            if (dataStorage.announcements[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+                let delBtn = document.createElement("button");
+                delBtn.id = x;
+                delBtn.innerHTML = "Delete Announcement";
+                div.appendChild(document.createElement("br"))
+                div.appendChild(document.createElement("br"))
+                div.appendChild(delBtn)
+                delBtn.onclick = function() {
+                    let conf = confirm("Are you sure you want to delete this announcement?")
+                    if (conf == true) {
+                        delBtn.disabled = true;
+                        delBtn.innerHTML = "Deleting"
+                        deleteData(`announcements/${y}/${x}`, function() {
+                            delete dataStorage["announcements"][y][x];
+                            if (Object.keys(dataStorage["announcements"][y]).length == 0) {
+                                delete dataStorage["announcements"][y];
+                            };
+                            loadAnnouncements()
+                        })
+                    };
+                }
+            }
+        }, function(e, x, y, f, event) {
+            e.innerHTML = `From ${dataStorage.announcements[y][x].name} at ${getTime(x)}<br><br>To ${dataStorage.announcements[y][x].to}<br><br>Heading:  ${dataStorage.announcements[y][x].heading}<br><br>${dataStorage.announcements[y][x].message.replaceAll("\n", "<br>")}`
+            if (event.target.id == x) {
+                f.click()
+            }
+        });
+    }
+    if (Object.keys(dataStorage.announcements).includes(dateToday)) {
+        startIt(dateToday);
+    } else {
+        document.getElementById("announcementDiv").innerHTML = "Getting Data. Please wait."
+        getData(`announcements/${dateToday}`, function(res) {
+            if (Object.keys(res).length != 0) {
+                dataStorage.announcements[dateToday] = res;
+                startIt(dateToday);
+            } else {
+                dataStorage.announcements[dateToday] = {};
+                document.getElementById("announcementDiv").innerHTML = "<b>No Data</b>";
+            }
+        })
+    }
+}
 document.getElementById("announcementBtn").onclick = function () {
     let annElem = createPrompt();
     let holder = annElem[0];
@@ -780,7 +598,7 @@ document.getElementById("announcementBtn").onclick = function () {
                     dataStorage.announcements[date] = {};
                 }
                 dataStorage.announcements[date][ts] = data;
-                document.getElementById("Announcements Btn").click();
+                loadAnnouncements()
             });
         } else {
             alert("Please fill up all the information");
@@ -789,6 +607,67 @@ document.getElementById("announcementBtn").onclick = function () {
 };
 
 // Casual Leave
+function loadCasualLeaves() {
+    let dateToday = document.getElementById("casualLeaveFilter").value;
+    function startIt(dT) {
+        let toLoad = {}
+        toLoad[dT] = dataStorage.casualLeaves[dT];
+        listLoad(toLoad, "casualLeaveDiv", function(div, x, y) {
+            div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${getTime(x)}</a>
+            <b style="font-size: 5vw; display: block;">${dataStorage.casualLeaves[y][x].name}</b>
+            <b style="font-size: 4vw;">Reason: ${dataStorage.casualLeaves[y][x].reason}</b>
+            <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.casualLeaves[y][x].type}</b><br>
+            <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
+            if (dataStorage.casualLeaves[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+                let delBtn = document.createElement("button");
+                delBtn.id = x;
+                delBtn.innerHTML = "Cancel Leave";
+                div.appendChild(document.createElement("br"))
+                div.appendChild(document.createElement("br"))
+                div.appendChild(delBtn)
+                delBtn.onclick = function() {
+                    let conf = confirm("Are you sure you want to cancel your leave?")
+                    if (conf == true) {
+                        delBtn.disabled = true;
+                        delBtn.innerHTML = "Canceling"
+                        deleteData(`casualLeaves/${y}/${x}`, function() {
+                            delete dataStorage["casualLeaves"][y][x];
+                            if (Object.keys(dataStorage["casualLeaves"][y]).length == 0) {
+                                delete dataStorage["casualLeaves"][y];
+                            };
+                            loadCasualLeaves()
+                        })
+                    };
+                }
+            }
+        }, function(e, x, y, f, event) {
+            e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+            Name: ${dataStorage.casualLeaves[y][x].name}<hr>
+            Type of Leave: ${dataStorage.casualLeaves[y][x].type}<hr>
+            Duration: ${dataStorage.casualLeaves[y][x].duration}<hr>
+            Start Date:  ${dataStorage.casualLeaves[y][x].startDate}<hr>
+            End Date: ${dataStorage.casualLeaves[y][x].endDate}<hr>
+            Reason: ${dataStorage.casualLeaves[y][x].reason}`
+            if (event.target.id == x) {
+                f.click()
+            }
+        });
+    };
+    if (Object.keys(dataStorage.casualLeaves).includes(dateToday)) {
+        startIt(dateToday);
+    } else {
+        document.getElementById("casualLeaveDiv").innerHTML = "Getting Data. Please wait."
+        getData(`casualLeaves/${dateToday}`, function(res) {
+            if (Object.keys(res).length != 0) {
+                dataStorage.casualLeaves[dateToday] = res;
+                startIt(dateToday);
+            } else {
+                dataStorage.casualLeaves[dateToday] = {};
+                document.getElementById("casualLeaveDiv").innerHTML = "<b>No Data</b>";
+            };
+        })
+    }
+}
 document.getElementById("casualLeaveBtn").onclick = function () {
     let csElem = createPrompt();
     let holder = csElem[0];
@@ -822,7 +701,7 @@ document.getElementById("casualLeaveBtn").onclick = function () {
                 closeBtn.click();
                 dataStorage.casualLeaves[date] = {}
                 dataStorage.casualLeaves[date][ts] = data;
-                document.getElementById("Casual Leave Btn").click();
+                loadCasualLeaves()
             });
         } else {
             alert("Please fill up all the information");
@@ -831,6 +710,68 @@ document.getElementById("casualLeaveBtn").onclick = function () {
 };
 
 // In Campus Leave
+function loadInCampusLeaves() {
+    let dateToday = document.getElementById("campusLeaveFilter").value;
+    function startIt(dT) {
+        let toLoad = {}
+        toLoad[dT] = dataStorage.inCampusLeaves[dT];
+        listLoad(toLoad, "campusLeaveDiv", function(div, x, y) {
+            div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${dataStorage.inCampusLeaves[y][x].date} ${dataStorage.inCampusLeaves[y][x].time}</a>
+            <b style="font-size: 5vw; display: block;">${dataStorage.inCampusLeaves[y][x].name}</b>
+            <b style="font-size: 4vw;">Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}</b>
+            <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.inCampusLeaves[y][x].period}</b><br>
+            <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
+            if (dataStorage.inCampusLeaves[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+                let delBtn = document.createElement("button");
+                delBtn.id = x;
+                delBtn.innerHTML = "Cancel Leave";
+                div.appendChild(document.createElement("br"))
+                div.appendChild(document.createElement("br"))
+                div.appendChild(delBtn)
+                delBtn.onclick = function() {
+                    let conf = confirm("Are you sure you want to cancel your leave?")
+                    if (conf == true) {
+                        delBtn.disabled = true;
+                        delBtn.innerHTML = "Canceling"
+                        deleteData(`inCampusLeaves/${y}/${x}`, function() {
+                            delete dataStorage["inCampusLeaves"][y][x];
+                            if (Object.keys(dataStorage["inCampusLeaves"][y]).length == 0) {
+                                delete dataStorage["inCampusLeaves"][y];
+                            };
+                            loadInCampusLeaves()
+                        })
+                        .catch((error) => {
+                            console.error("Error deleting data: ", error);
+                        });
+                    };
+                }
+            }
+        }, function(e, x, y, f, event) {
+            e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+            Name: ${dataStorage.inCampusLeaves[y][x].name}<hr>
+            Date and Time: ${dataStorage.inCampusLeaves[y][x].date} ${dataStorage.inCampusLeaves[y][x].time}<hr>
+            Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}<hr>
+            Period [From - To]:  ${dataStorage.inCampusLeaves[y][x].period}`
+            if (event.target.id == x) {
+                f.click()
+            }
+        });
+    }
+    if (Object.keys(dataStorage.inCampusLeaves).includes(dateToday)) {
+        startIt(dateToday);
+    } else {
+        document.getElementById("campusLeaveDiv").innerHTML = "Getting Data. Please wait."
+        getData(`inCampusLeaves/${dateToday}`, function(res) {
+            if (Object.keys(res).length != 0) {
+                dataStorage.inCampusLeaves[dateToday] = res;
+                startIt(dateToday);
+            } else {
+                dataStorage.inCampusLeaves[dateToday] = {};
+                document.getElementById("campusLeaveDiv").innerHTML = "<b>No Data</b>";
+            };
+        })
+    }
+}
 document.getElementById("campusLeaveBtn").onclick = function () {
     let csElem = createPrompt();
     let holder = csElem[0];
@@ -869,7 +810,7 @@ document.getElementById("campusLeaveBtn").onclick = function () {
                 closeBtn.click();
                 dataStorage.inCampusLeaves[date] = {}
                 dataStorage.inCampusLeaves[date][ts] = data;
-                document.getElementById("In Campus Leave Btn").click();
+                loadInCampusLeaves()
             });
         } else {
             alert("Please fill up all the information");
@@ -878,6 +819,65 @@ document.getElementById("campusLeaveBtn").onclick = function () {
 };
 
 // Study Report
+function loadStudyReports() {
+    let dateToday = document.getElementById("studyReportFilter").value;
+    function startIt(dT) {
+        let toLoad = {}
+        toLoad[dT] = dataStorage.studyReports[dT];
+        listLoad(toLoad, "studyReportDiv", function(div, x, y) {
+            div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${getTime(x)}</a>
+            <b style="font-size: 5vw; display: block;">${dataStorage.studyReports[y][x].teacher}</b>
+            <b style="font-size: 4vw; color: #3A3B3C;">${dataStorage.studyReports[y][x].study}</b>
+            <b style="display: block; font-size: 4vw; margin-top: 10px;">${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}</b><br>
+            <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
+            if (dataStorage.studyReports[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+                let delBtn = document.createElement("button");
+                delBtn.id = x;
+                delBtn.innerHTML = "Delete Report";
+                div.appendChild(document.createElement("br"))
+                div.appendChild(document.createElement("br"))
+                div.appendChild(delBtn)
+                delBtn.onclick = function() {
+                    let conf = confirm("Are you sure you want to delete this report?")
+                    if (conf == true) {
+                        delBtn.disabled = true;
+                        delBtn.innerHTML = "Deleting"
+                        deleteData(`studyReports/${y}/${x}`, function() {
+                            delete dataStorage["studyReports"][y][x];
+                            if (Object.keys(dataStorage["studyReports"][y]).length == 0) {
+                                delete dataStorage["studyReports"][y];
+                            };
+                            loadStudyReports()
+                        })
+                    };
+                }
+            }
+        }, function(e, x, y, f, event) {
+            e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+            ToD: ${dataStorage.studyReports[y][x].teacher}<hr>
+            Study: ${dataStorage.studyReports[y][x].study}<hr>
+            Date: ${dataStorage.studyReports[y][x].date}<hr>
+            Absentee:<br>${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}`
+            if (event.target.id == x) {
+                f.click()
+            }
+        });
+    };
+    if (Object.keys(dataStorage.studyReports).includes(dateToday)) {
+        startIt(dateToday);
+    } else {
+        document.getElementById("studyReportDiv").innerHTML = "Getting Data. Please wait."
+        getData(`studyReports/${dateToday}`, function(res) {
+            if (Object.keys(res).length != 0) {
+                dataStorage.studyReports[dateToday] = res;
+                startIt(dateToday);
+            } else {
+                dataStorage.studyReports[dateToday] = {};
+                document.getElementById("studyReportDiv").innerHTML = "<b>No Data</b>";
+            }
+        })
+    }
+}
 document.getElementById("studyReportBtn").onclick = function () {
     let csElem = createPrompt();
     let holder = csElem[0];
@@ -906,7 +906,7 @@ document.getElementById("studyReportBtn").onclick = function () {
                 closeBtn.click();
                 dataStorage.studyReports[date] = {}
                 dataStorage.studyReports[date][ts] = data;
-                document.getElementById("Study Report Btn").click();
+                loadStudyReports()
             });
         } else {
             alert("Please fill up all the information");
@@ -915,6 +915,77 @@ document.getElementById("studyReportBtn").onclick = function () {
 };
 
 // Staff Profile
+var staffProfileRedDot = undefined;
+var staffProfileAddRedDot = undefined;
+function loadStaffProfiles() {
+    document.getElementById("staffProfileDiv").innerHTML = "";
+    document.getElementById("staffProfileDiv").appendChild(at)
+    let users = data.users;
+    if (users == undefined) {
+        users = {}
+        data.users = {};
+    }
+    for (let o of Object.keys(users)) {
+        if (users[o] == "") {
+            delete users[o];
+        }
+    }
+    sortObject(users, "name", true)
+    if (Object.keys(users).length == 0) {
+        let b = document.createElement("b")
+        b.innerHTML = "No Data";
+        document.getElementById("staffProfileDiv").insertBefore(b, document.getElementById("staffProfileDiv").firstChild);
+    } else {
+        for (let s of Object.keys(users)) {
+            if (users[s] != "") {
+                let div = document.createElement("div");
+                div.style = "width: 80%; background-color: white; border: 2px solid #ddd; border-radius: 3vw; padding: 5%; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);";
+                document.getElementById("staffProfileDiv").insertBefore(div, document.getElementById("staffProfileDiv").firstChild);
+                div.innerHTML = `<b style="font-size: 5vw; display: block;">${users[s].name}</b>
+                <b style="font-size: 4vw;">Class Teacher of ${users[s].classTeacher}</b>
+                <b style="display: block; font-size: 4vw; color: #3A3B3C;">${users[s].subject}</b><br>
+                <a style="font-size: 4vw; color: blue;">Click to open more details</a>`;
+                div.onclick = function(ev) {
+                    let elem = createPrompt()
+                    elem[0].style.backgroundColor = "white";
+                    elem[0].style.textAlign = "left";
+                    let con = `<div onclick="window.open('${users[s].profilePicture}', '_blank');" style="position: relative; left: 50%; transform: translateX(-50%); width: 30%; aspect-ratio: 1/1; border-radius: 100%; overflow: hidden; background-image: url('${users[s].profilePicture}'); background-position: center; background-repeat: no-repeat; background-size: cover;"></div><br>
+                    <b style="width: 100%; text-align: center; left: 0%; position: relative; display: inline-block;">${users[s].name}</b><br><br>
+                    Class Teacher of&nbsp;${users[s].classTeacher}<hr>
+                    Subject: ${users[s].subject}<hr>
+                    Currently Teaching Classes: ${users[s].classes}<hr>
+                    Phone Number: <a href='tel: ${users[s].phoneNumber}'>${users[s].phoneNumber}</a><hr>
+                    Email: <a href='mailto:${users[s].email}'>${users[s].email}</a>`
+                    elem[0].innerHTML = con;
+                    if (ev.target.id == s) {
+                        elem[1].click();
+                    }
+                };
+                if (s == localStorage.userId) {
+                    let delBtn = document.createElement("button");
+                    delBtn.id = s;
+                    delBtn.innerHTML = "Delete Profile";
+                    div.appendChild(document.createElement("br"))
+                    div.appendChild(document.createElement("br"))
+                    div.appendChild(delBtn)
+                    delBtn.onclick = function() {
+                        let conf = confirm("Are you sure you want to delete your profile?")
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Deleting"
+                            deleteObject(stRef(storage, `staffProfile/${localStorage.userId}/Profile Picture`)).then(() => {
+                                writeData(`startup/users/${localStorage.userId}`, "", function() {
+                                    data.users[localStorage.userId] = "";
+                                    loadStaffProfiles()
+                                })
+                            });
+                        };
+                    }
+                }
+            }
+        }
+    }
+}
 document.getElementById("staffProfileBtn").onclick = function () {
     let csElem = createPrompt();
     let holder = csElem[0];
@@ -985,7 +1056,7 @@ document.getElementById("staffProfileBtn").onclick = function () {
                 let storageRef = stRef(storage, `staffProfile/${localStorage.userId}/Profile Picture`)
                 let task = uploadBytesResumable(storageRef, spFile);
                 task.on('state_changed', (snapshot) => {
-                    let progress = `${(snapshot.bytesTransferred / 1024).toFixed(2)} KB / ${(snapshot.totalBytes / 1024 / 1024).toFixed(2)}mb`;
+                    let progress = `${(snapshot.bytesTransferred / 1024).toFixed(2)} KB / ${(snapshot.totalBytes / 1024).toFixed(2)} KB`;
                     uploadBtn.innerHTML = ("Uploading Profile Picture<br>"+progress)
                 }, 
                 (error) => {
@@ -998,7 +1069,13 @@ document.getElementById("staffProfileBtn").onclick = function () {
                         writeData(`startup/users/${localStorage.userId}`, tempData, function() {
                             closeBtn.click();
                             data.users[localStorage.userId] = tempData;
-                            document.getElementById("Staff Profile Btn").click();
+                            loadStaffProfiles()
+                            menuRedDot.remove()
+                            menuRedDot = undefined;
+                            staffProfileAddRedDot.remove()
+                            staffProfileAddRedDot = undefined;
+                            staffProfileRedDot.remove();
+                            staffProfileRedDot = undefined;
                         });
                     })
                 });
@@ -1048,3 +1125,5 @@ for (let x of contacts) {
     document.getElementById("contactsDiv").appendChild(div);
     document.getElementById("contactsDiv").appendChild(document.createElement("br"));
 };
+
+// Handle Database Updates
