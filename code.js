@@ -1,10 +1,3 @@
-// TODO
-/*
-Delete feature should be turned off after an hour of posting.
-Make the GUI a little better with stylings.
-*/
-
-
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -12,25 +5,15 @@ import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.c
 import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBUSb8D9xWqda-FGEVfTeEokSMTawyCrFI",
-    authDomain: "drukgyel-hss.firebaseapp.com",
-    databaseURL: "https://drukgyel-hss-default-rtdb.firebaseio.com",
-    projectId: "drukgyel-hss",
-    storageBucket: "drukgyel-hss.appspot.com",
-    messagingSenderId: "930189749346",
-    appId: "1:930189749346:web:22152d4d206ecd6b4ef53b",
-    measurementId: "G-D1QK09ZJEN"
+    apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
+    authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
+    databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
+    projectId: "drukgyel-hss-4a7f7",
+    storageBucket: "drukgyel-hss-4a7f7.appspot.com",
+    messagingSenderId: "728432489451",
+    appId: "1:728432489451:web:83f9979d39672748df9fae",
+    measurementId: "G-RB5MMY67QV"
 };
-// const firebaseConfig = {
-//     apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
-//     authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
-//     databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
-//     projectId: "drukgyel-hss-4a7f7",
-//     storageBucket: "drukgyel-hss-4a7f7.appspot.com",
-//     messagingSenderId: "728432489451",
-//     appId: "1:728432489451:web:83f9979d39672748df9fae",
-//     measurementId: "G-RB5MMY67QV"
-// };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -302,6 +285,17 @@ getData("startup", function (res) {
             staffProfileAddRedDot = redDot(document.getElementById("staffProfileBtn"), `15%`, `15%`);
         }
     }
+
+    // Contacts
+    let contacts = data.contacts;
+    for (let x of contacts) {
+        let div = document.createElement("div");
+        div.style = "font-size: 4vw;"
+        div.innerHTML = `<b>${x.title}</b><br><a>${x.name}</a>
+        <button style='float: right;' onclick='window.location.href = "tel: ${x.contact}";'>Contact</button>`;
+        document.getElementById("contactsDiv").appendChild(div);
+        document.getElementById("contactsDiv").appendChild(document.createElement("hr"));
+    };
 
     startup()
 });
@@ -1086,44 +1080,6 @@ document.getElementById("staffProfileBtn").onclick = function () {
             alert("Please fill up all the information");
         };
     });
-};
-
-// Contacts
-var contacts = [
-    {
-        "title": "Social Coordinator",
-        "name": "Lop. Yeshey Loday",
-        "contact": 17627882
-    },
-    {
-        "title": "Spiritual Coordinator",
-        "name": "Lop. Gem Gyelsthen",
-        "contact": 17625858
-    },
-    {
-        "title": "Vice Principal (Physical Coordinator)",
-        "name": "Lop. Namgay Phuntsho",
-        "contact": 17640554
-    },
-    {
-        "title": "Emotional Coordinator",
-        "name": "Lop. Tshering Yangden",
-        "contact": 17577292
-    },
-    {
-        "title": "Exam Coordinator",
-        "name": "Lop. Rinchen Khandu",
-        "contact": 17659251
-    }
-];
-
-for (let x of contacts) {
-    let div = document.createElement("div");
-    div.style = "font-size: 4vw;"
-    div.innerHTML = `<b>${x.title}</b><br><a>${x.name}</a>
-    <button style='float: right;' onclick='window.location.href = "tel: ${x.contact}";'>Contact</button>`;
-    document.getElementById("contactsDiv").appendChild(div);
-    document.getElementById("contactsDiv").appendChild(document.createElement("br"));
 };
 
 // Handle Database Updates
