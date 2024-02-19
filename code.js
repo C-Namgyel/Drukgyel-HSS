@@ -1,3 +1,10 @@
+// TODO
+/*
+Delete feature should be turned off after an hour of posting.
+Make the GUI a little better with stylings.
+*/
+
+
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -5,15 +12,25 @@ import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.c
 import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
-    authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
-    databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
-    projectId: "drukgyel-hss-4a7f7",
-    storageBucket: "drukgyel-hss-4a7f7.appspot.com",
-    messagingSenderId: "728432489451",
-    appId: "1:728432489451:web:83f9979d39672748df9fae",
-    measurementId: "G-RB5MMY67QV"
+    apiKey: "AIzaSyBUSb8D9xWqda-FGEVfTeEokSMTawyCrFI",
+    authDomain: "drukgyel-hss.firebaseapp.com",
+    databaseURL: "https://drukgyel-hss-default-rtdb.firebaseio.com",
+    projectId: "drukgyel-hss",
+    storageBucket: "drukgyel-hss.appspot.com",
+    messagingSenderId: "930189749346",
+    appId: "1:930189749346:web:22152d4d206ecd6b4ef53b",
+    measurementId: "G-D1QK09ZJEN"
 };
+// const firebaseConfig = {
+//     apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
+//     authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
+//     databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
+//     projectId: "drukgyel-hss-4a7f7",
+//     storageBucket: "drukgyel-hss-4a7f7.appspot.com",
+//     messagingSenderId: "728432489451",
+//     appId: "1:728432489451:web:83f9979d39672748df9fae",
+//     measurementId: "G-RB5MMY67QV"
+// };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -76,7 +93,7 @@ function createPrompt() {
     div.style = "position: fixed; z-index: 2; width: 100%; height: 100%; left: 0%; top: 0%; background-color: rgba(0,0,0,0.5);";
     document.body.appendChild(div);
     let holder = document.createElement("div");
-    holder.style = "padding: 5%; position: fixed; z-index: 2; width: 75%; height: 75%; left: 50%; top: 50%; transform: translateX(-50%) translateY(-50%); border-radius: 5vw; background-color: #0989EC; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24); text-align: center; overflow: auto; overflow-wrap: break-word; scroll-behavior: smooth;";
+    holder.style = "padding: 5%; position: fixed; z-index: 2; width: 75%; height: 75%; left: 50%; top: 50%; transform: translateX(-50%) translateY(-50%); border-radius: 5vw; background-color: #0989EC; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.24); text-align: center; overflow: auto; overflow-wrap:";
     div.appendChild(holder);
     let close = document.createElement("button");
     close.style.backgroundColor = "red";
@@ -288,19 +305,28 @@ getData("startup", function (res) {
 
     // Contacts
     let contacts = data.contacts;
-    if (contacts =- undefined) {
-        contacts = {}
-    }
-    for (let x of Object.keys(contacts)) {
+    for (let x of contacts) {
         let div = document.createElement("div");
         div.style = "font-size: 4vw;"
-        div.innerHTML = `<b>${contacts[x].title}</b><br><a>${contacts[x].name}</a>
-        <button style='float: right;' onclick='window.location.href = "tel: ${contacts[x].contact}";'>Contact</button>`;
+        div.innerHTML = `<b>${x.title}</b><br><a>${x.name}</a>
+        <button style='float: right;' onclick='window.location.href = "tel: ${x.contact}";'>Contact</button>`;
         document.getElementById("contactsDiv").appendChild(div);
         document.getElementById("contactsDiv").appendChild(document.createElement("hr"));
     };
+
     startup()
 });
+// getData(`announcements/${getTodayDate()}`, function(res) {
+//     if (res != undefined) {
+//         for (let t of Object.keys(res)) {
+//             if (localStorage.lastAnnouncement == undefined || parseInt(localStorage.lastAnnouncement) < parseInt(t)) {
+//                 if (menuRedDot == undefined) {
+                    
+//                 }
+//             }
+//         }
+//     }
+// })
 
 // Setup the navigation drawer;
 var navList = [
