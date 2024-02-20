@@ -1,10 +1,3 @@
-// TODO
-/*
-Delete feature should be turned off after an hour of posting.
-Make the GUI a little better with stylings.
-*/
-
-
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -12,25 +5,15 @@ import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.c
 import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyBUSb8D9xWqda-FGEVfTeEokSMTawyCrFI",
-    authDomain: "drukgyel-hss.firebaseapp.com",
-    databaseURL: "https://drukgyel-hss-default-rtdb.firebaseio.com",
-    projectId: "drukgyel-hss",
-    storageBucket: "drukgyel-hss.appspot.com",
-    messagingSenderId: "930189749346",
-    appId: "1:930189749346:web:22152d4d206ecd6b4ef53b",
-    measurementId: "G-D1QK09ZJEN"
+    apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
+    authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
+    databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
+    projectId: "drukgyel-hss-4a7f7",
+    storageBucket: "drukgyel-hss-4a7f7.appspot.com",
+    messagingSenderId: "728432489451",
+    appId: "1:728432489451:web:83f9979d39672748df9fae",
+    measurementId: "G-RB5MMY67QV"
 };
-// const firebaseConfig = {
-//     apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
-//     authDomain: "drukgyel-hss-4a7f7.firebaseapp.com",
-//     databaseURL: "https://drukgyel-hss-4a7f7-default-rtdb.firebaseio.com/",
-//     projectId: "drukgyel-hss-4a7f7",
-//     storageBucket: "drukgyel-hss-4a7f7.appspot.com",
-//     messagingSenderId: "728432489451",
-//     appId: "1:728432489451:web:83f9979d39672748df9fae",
-//     measurementId: "G-RB5MMY67QV"
-// };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -186,6 +169,12 @@ function redDot(parent, x, y) {
     parent.appendChild(div)
     return(div)
 }
+function removeMenuRedDot() {
+    if (staffProfileRedDot == undefined || announcementsRedDot == undefined) {
+        menuRedDot.remove();
+        menuRedDot = undefined;
+    }
+}
 
 // Setup startup screen
 function startup() {
@@ -295,6 +284,9 @@ getData("startup", function (res) {
     document.getElementById("aboutDiv").innerHTML = data.aboutSchool.replaceAll("\n", "<br>");
 
     // Staff Profile
+    if (data.users == undefined) {
+        data.users = {};
+    }
     if (Object.keys(data.users).includes(localStorage.userId)) {
         if (data.users[localStorage.userId] == "") {
             staffProfileRedDot = redDot(document.getElementById("navDiv"), `5%`, `${document.getElementById("Staff Profile Btn").getBoundingClientRect().top}px`)
@@ -305,6 +297,9 @@ getData("startup", function (res) {
 
     // Contacts
     let contacts = data.contacts;
+    if (contacts == undefined) {
+        contacts = {};
+    }
     for (let x of contacts) {
         let div = document.createElement("div");
         div.style = "font-size: 4vw;"
@@ -316,17 +311,29 @@ getData("startup", function (res) {
 
     startup()
 });
-// getData(`announcements/${getTodayDate()}`, function(res) {
-//     if (res != undefined) {
-//         for (let t of Object.keys(res)) {
-//             if (localStorage.lastAnnouncement == undefined || parseInt(localStorage.lastAnnouncement) < parseInt(t)) {
-//                 if (menuRedDot == undefined) {
-                    
-//                 }
-//             }
-//         }
-//     }
-// })
+
+// Announcements Load at startup
+if (localStorage.readAnnouncements == undefined) {
+    localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
+} else {
+    if (Object.keys(JSON.parse(localStorage.readAnnouncements))[0] != getTodayDate()) {
+        localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
+    }
+}
+getData(`announcements/${getTodayDate()}`, function(res) {
+    if (res != undefined) {
+        for (let t of Object.keys(res)) {
+            if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(t) == false) {
+                if (menuRedDot == undefined) {
+                    menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
+                }
+                if (announcementsRedDot == undefined) {
+                    announcementsRedDot = redDot(document.getElementById("navDiv"), `5%`, `${document.getElementById("Announcements Btn").getBoundingClientRect().top}px`)
+                }
+            }
+        }
+    }
+})
 
 // Setup the navigation drawer;
 var navList = [
@@ -430,7 +437,7 @@ function listLoad(data, divElem, code, oncl) {
             document.getElementById(divElem).insertBefore(document.createElement("br"), document.getElementById(divElem).firstChild);
             for (let x of Object.keys(data[y])) {
                 let div = document.createElement("div");
-                div.style = "width: 80%; background-color: white; border: 2px solid #ddd; border-radius: 3vw; padding: 5%; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);";
+                div.style = "position: relative; width: 80%; background-color: white; border: 2px solid #ddd; border-radius: 3vw; padding: 5%; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);";
                 document.getElementById(divElem).insertBefore(div, document.getElementById(divElem).firstChild);
                 code(div, x, y)
                 div.onclick = function(event) {
@@ -506,6 +513,8 @@ for (let a = 0; a < classes.length; a++) {
 };
 
 // Announcements
+var announcementsRedDot = undefined;
+var announcementsRedDotList = {};
 function loadAnnouncements() {
     let dateToday = document.getElementById("announcementFilter").value;
     function startIt(dT) {
@@ -518,6 +527,10 @@ function loadAnnouncements() {
             <hr style="width: 100%;">
             <b style="display: block; font-size: 5vw; margin-top: 10px;">${dataStorage.announcements[y][x].heading}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open full announcement</a>`;
+            if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(x) == false) {
+                let annRed = redDot(div, "90%", "10%")
+                announcementsRedDotList[x] = annRed;
+            }
             if (dataStorage.announcements[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
                 let delBtn = document.createElement("button");
                 delBtn.id = x;
@@ -542,6 +555,18 @@ function loadAnnouncements() {
             }
         }, function(e, x, y, f, event) {
             e.innerHTML = `From ${dataStorage.announcements[y][x].name} at ${getTime(x)}<br><br>To ${dataStorage.announcements[y][x].to}<br><br>Heading:  ${dataStorage.announcements[y][x].heading}<br><br>${dataStorage.announcements[y][x].message.replaceAll("\n", "<br>")}`
+            let tempJson = JSON.parse(localStorage.readAnnouncements)
+            tempJson[getTodayDate()].push(x)
+            localStorage.readAnnouncements = JSON.stringify(tempJson)
+            if (announcementsRedDotList[x] != undefined) {
+                announcementsRedDotList[x].remove();
+                delete announcementsRedDotList[x];
+                if (Object.keys(announcementsRedDotList).length == 0) {
+                    announcementsRedDot.remove();
+                    announcementsRedDot = undefined;
+                    removeMenuRedDot();
+                }
+            }
             if (event.target.id == x) {
                 f.click()
             }
@@ -609,6 +634,9 @@ document.getElementById("announcementBtn").onclick = function () {
                     dataStorage.announcements[date] = {};
                 }
                 dataStorage.announcements[date][ts] = data;
+                let tempJson = JSON.parse(localStorage.readAnnouncements)
+                tempJson[getTodayDate()].push(""+ts)
+                localStorage.readAnnouncements = JSON.stringify(tempJson)
                 loadAnnouncements()
             });
         } else {
@@ -1081,12 +1109,11 @@ document.getElementById("staffProfileBtn").onclick = function () {
                             closeBtn.click();
                             data.users[localStorage.userId] = tempData;
                             loadStaffProfiles()
-                            menuRedDot.remove()
-                            menuRedDot = undefined;
                             staffProfileAddRedDot.remove()
                             staffProfileAddRedDot = undefined;
                             staffProfileRedDot.remove();
                             staffProfileRedDot = undefined;
+                            removeMenuRedDot()
                         });
                     })
                 });
