@@ -14,6 +14,9 @@ function setScreen(id) {
         return false
     }
 }
+function getScreen() {
+    return(document.querySelector('.scrn:not([hidden])'))
+}
 function animation(elem, name, duration) {
     elem.style.animationName = name;
     elem.style.animationDuration = duration;

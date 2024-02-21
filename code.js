@@ -1,8 +1,8 @@
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
-import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
-import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject, listAll } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
+import { getDatabase, ref, set, get, child, remove, onValue } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-database.js";
+import { getStorage, ref as stRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-storage.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyAjpnWMiVf0inGKOiyiXG_AqcmvfVzfq1E",
@@ -54,6 +54,11 @@ function deleteData(path, code) {
     remove(ref(database, path)).then(() => {
         code()
     })
+}
+function onDataUpdate(path, code) {
+    onValue(ref(database, path), (snapshot) => {
+        code(snapshot.val());
+    });
 }
 
 // Handle Online and Offline Changes
@@ -170,7 +175,7 @@ function redDot(parent, x, y) {
     return(div)
 }
 function removeMenuRedDot() {
-    if (staffProfileRedDot == undefined || announcementsRedDot == undefined) {
+    if (staffProfileRedDot == undefined && announcementsRedDot == undefined && menuRedDot != undefined) {
         menuRedDot.remove();
         menuRedDot = undefined;
     }
@@ -225,7 +230,7 @@ function startup() {
 }
 
 // Global Variables
-var data = undefined;
+var data = {};
 var dataStorage = {
     announcements: {},
     casualLeaves: {},
@@ -243,7 +248,7 @@ if ((navigator.onLine ? "Online" : "Offline") == "Offline") {
 document.getElementById("splashLogo").onanimationend = function () {
     setTimeout(function () {
         splash = true;
-        if (data != undefined) {
+        if (Object.keys(data).length != 0) {
             document.getElementById("splashDiv").remove();
             loading = "Loaded";
             startup()
@@ -289,7 +294,7 @@ getData("startup", function (res) {
     }
     if (Object.keys(data.users).includes(localStorage.userId)) {
         if (data.users[localStorage.userId] == "") {
-            staffProfileRedDot = redDot(document.getElementById("navDiv"), `5%`, `${document.getElementById("Staff Profile Btn").getBoundingClientRect().top}px`)
+            staffProfileRedDot = redDot(document.getElementById("Staff Profile Btn"), `0%`, `0%`)
             menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
             staffProfileAddRedDot = redDot(document.getElementById("staffProfileBtn"), `15%`, `15%`);
         }
@@ -320,20 +325,6 @@ if (localStorage.readAnnouncements == undefined) {
         localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
     }
 }
-getData(`announcements/${getTodayDate()}`, function(res) {
-    if (res != undefined) {
-        for (let t of Object.keys(res)) {
-            if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(t) == false) {
-                if (menuRedDot == undefined) {
-                    menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
-                }
-                if (announcementsRedDot == undefined) {
-                    announcementsRedDot = redDot(document.getElementById("navDiv"), `5%`, `${document.getElementById("Announcements Btn").getBoundingClientRect().top}px`)
-                }
-            }
-        }
-    }
-})
 
 // Setup the navigation drawer;
 var navList = [
@@ -351,7 +342,7 @@ var navList = [
 ];
 for (let d = 0; d < navList.length; d++) {
     let a = document.createElement("a");
-    a.style = "text-decoration: none; display: flex; align-items: center;";
+    a.style = "text-decoration: none; display: flex; align-items: center; position: relative;";
     a.value = navList[d].label;
     a.id = navList[d]["label"] + " Btn";
     let img = document.createElement("img");
@@ -528,8 +519,16 @@ function loadAnnouncements() {
             <b style="display: block; font-size: 5vw; margin-top: 10px;">${dataStorage.announcements[y][x].heading}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open full announcement</a>`;
             if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(x) == false) {
-                let annRed = redDot(div, "90%", "10%")
-                announcementsRedDotList[x] = annRed;
+                if (dataStorage.announcements[y][x].uid != localStorage.userId) {
+                    let annRed = redDot(div, "90%", "10%")
+                    announcementsRedDotList[x] = annRed;
+                    if (menuRedDot == undefined) {
+                        menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
+                    }
+                    if (announcementsRedDot == undefined) {
+                        announcementsRedDot = redDot(document.getElementById("Announcements Btn"), `0%`, `0%`)
+                    }
+                }
             }
             if (dataStorage.announcements[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
                 let delBtn = document.createElement("button");
@@ -543,32 +542,27 @@ function loadAnnouncements() {
                     if (conf == true) {
                         delBtn.disabled = true;
                         delBtn.innerHTML = "Deleting"
-                        deleteData(`announcements/${y}/${x}`, function() {
-                            delete dataStorage["announcements"][y][x];
-                            if (Object.keys(dataStorage["announcements"][y]).length == 0) {
-                                delete dataStorage["announcements"][y];
-                            };
-                            loadAnnouncements()
-                        })
+                        deleteData(`announcements/${y}/${x}`, function() {})
                     };
                 }
             }
         }, function(e, x, y, f, event) {
-            e.innerHTML = `From ${dataStorage.announcements[y][x].name} at ${getTime(x)}<br><br>To ${dataStorage.announcements[y][x].to}<br><br>Heading:  ${dataStorage.announcements[y][x].heading}<br><br>${dataStorage.announcements[y][x].message.replaceAll("\n", "<br>")}`
-            let tempJson = JSON.parse(localStorage.readAnnouncements)
-            tempJson[getTodayDate()].push(x)
-            localStorage.readAnnouncements = JSON.stringify(tempJson)
-            if (announcementsRedDotList[x] != undefined) {
-                announcementsRedDotList[x].remove();
-                delete announcementsRedDotList[x];
-                if (Object.keys(announcementsRedDotList).length == 0) {
-                    announcementsRedDot.remove();
-                    announcementsRedDot = undefined;
-                    removeMenuRedDot();
+            if (event.target.id != x) {
+                e.innerHTML = `From ${dataStorage.announcements[y][x].name} at ${getTime(x)}<br><br>To ${dataStorage.announcements[y][x].to}<br><br>Heading:  ${dataStorage.announcements[y][x].heading}<br><br>${dataStorage.announcements[y][x].message.replaceAll("\n", "<br>")}`
+                let tempJson = JSON.parse(localStorage.readAnnouncements)
+                tempJson[getTodayDate()].push(x)
+                localStorage.readAnnouncements = JSON.stringify(tempJson)
+                if (announcementsRedDotList[x] != undefined) {
+                    announcementsRedDotList[x].remove();
+                    delete announcementsRedDotList[x];
+                    if (Object.keys(announcementsRedDotList).length == 0) {
+                        announcementsRedDot.remove();
+                        announcementsRedDot = undefined;
+                        removeMenuRedDot();
+                    }
                 }
-            }
-            if (event.target.id == x) {
-                f.click()
+            } else {
+                f.click();
             }
         });
     }
@@ -629,15 +623,14 @@ document.getElementById("announcementBtn").onclick = function () {
             uploadBtn.innerHTML = "Uploading...";
             let date = `${time.getFullYear()}-${(time.getMonth() + 1).toString().padStart(2, "0")}-${time.getDate().toString().padStart(2, "0")}`
             writeData(`announcements/${date}/${ts}`, data, function() {
+                // let tempJson = JSON.parse(localStorage.readAnnouncements)
+                // tempJson[getTodayDate()].push(""+ts)
+                // localStorage.readAnnouncements = JSON.stringify(tempJson)
                 closeBtn.click();
                 if (dataStorage.announcements[date] == undefined) {
                     dataStorage.announcements[date] = {};
                 }
                 dataStorage.announcements[date][ts] = data;
-                let tempJson = JSON.parse(localStorage.readAnnouncements)
-                tempJson[getTodayDate()].push(""+ts)
-                localStorage.readAnnouncements = JSON.stringify(tempJson)
-                loadAnnouncements()
             });
         } else {
             alert("Please fill up all the information");
@@ -669,25 +662,20 @@ function loadCasualLeaves() {
                     if (conf == true) {
                         delBtn.disabled = true;
                         delBtn.innerHTML = "Canceling"
-                        deleteData(`casualLeaves/${y}/${x}`, function() {
-                            delete dataStorage["casualLeaves"][y][x];
-                            if (Object.keys(dataStorage["casualLeaves"][y]).length == 0) {
-                                delete dataStorage["casualLeaves"][y];
-                            };
-                            loadCasualLeaves()
-                        })
+                        deleteData(`casualLeaves/${y}/${x}`, function() {})
                     };
                 }
             }
         }, function(e, x, y, f, event) {
-            e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
-            Name: ${dataStorage.casualLeaves[y][x].name}<hr>
-            Type of Leave: ${dataStorage.casualLeaves[y][x].type}<hr>
-            Duration: ${dataStorage.casualLeaves[y][x].duration}<hr>
-            Start Date:  ${dataStorage.casualLeaves[y][x].startDate}<hr>
-            End Date: ${dataStorage.casualLeaves[y][x].endDate}<hr>
-            Reason: ${dataStorage.casualLeaves[y][x].reason}`
-            if (event.target.id == x) {
+            if (event.target.id != x) {
+                e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+                Name: ${dataStorage.casualLeaves[y][x].name}<hr>
+                Type of Leave: ${dataStorage.casualLeaves[y][x].type}<hr>
+                Duration: ${dataStorage.casualLeaves[y][x].duration}<hr>
+                Start Date:  ${dataStorage.casualLeaves[y][x].startDate}<hr>
+                End Date: ${dataStorage.casualLeaves[y][x].endDate}<hr>
+                Reason: ${dataStorage.casualLeaves[y][x].reason}`
+            } else {
                 f.click()
             }
         });
@@ -740,7 +728,6 @@ document.getElementById("casualLeaveBtn").onclick = function () {
                 closeBtn.click();
                 dataStorage.casualLeaves[date] = {}
                 dataStorage.casualLeaves[date][ts] = data;
-                loadCasualLeaves()
             });
         } else {
             alert("Please fill up all the information");
@@ -772,13 +759,7 @@ function loadInCampusLeaves() {
                     if (conf == true) {
                         delBtn.disabled = true;
                         delBtn.innerHTML = "Canceling"
-                        deleteData(`inCampusLeaves/${y}/${x}`, function() {
-                            delete dataStorage["inCampusLeaves"][y][x];
-                            if (Object.keys(dataStorage["inCampusLeaves"][y]).length == 0) {
-                                delete dataStorage["inCampusLeaves"][y];
-                            };
-                            loadInCampusLeaves()
-                        })
+                        deleteData(`inCampusLeaves/${y}/${x}`, function() {})
                         .catch((error) => {
                             console.error("Error deleting data: ", error);
                         });
@@ -786,12 +767,14 @@ function loadInCampusLeaves() {
                 }
             }
         }, function(e, x, y, f, event) {
-            e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
-            Name: ${dataStorage.inCampusLeaves[y][x].name}<hr>
-            Date and Time: ${dataStorage.inCampusLeaves[y][x].date} ${dataStorage.inCampusLeaves[y][x].time}<hr>
-            Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}<hr>
-            Period [From - To]:  ${dataStorage.inCampusLeaves[y][x].period}`
-            if (event.target.id == x) {
+            if (event.target.id != x) {
+                e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+                Name: ${dataStorage.inCampusLeaves[y][x].name}<hr>
+                Date and Time: ${dataStorage.inCampusLeaves[y][x].date} ${dataStorage.inCampusLeaves[y][x].time}<hr>
+                Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}<hr>
+                Period [From - To]:  ${dataStorage.inCampusLeaves[y][x].period}`
+            
+            } else {
                 f.click()
             }
         });
@@ -849,7 +832,6 @@ document.getElementById("campusLeaveBtn").onclick = function () {
                 closeBtn.click();
                 dataStorage.inCampusLeaves[date] = {}
                 dataStorage.inCampusLeaves[date][ts] = data;
-                loadInCampusLeaves()
             });
         } else {
             alert("Please fill up all the information");
@@ -881,23 +863,18 @@ function loadStudyReports() {
                     if (conf == true) {
                         delBtn.disabled = true;
                         delBtn.innerHTML = "Deleting"
-                        deleteData(`studyReports/${y}/${x}`, function() {
-                            delete dataStorage["studyReports"][y][x];
-                            if (Object.keys(dataStorage["studyReports"][y]).length == 0) {
-                                delete dataStorage["studyReports"][y];
-                            };
-                            loadStudyReports()
-                        })
+                        deleteData(`studyReports/${y}/${x}`, function() {})
                     };
                 }
             }
         }, function(e, x, y, f, event) {
-            e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
-            ToD: ${dataStorage.studyReports[y][x].teacher}<hr>
-            Study: ${dataStorage.studyReports[y][x].study}<hr>
-            Date: ${dataStorage.studyReports[y][x].date}<hr>
-            Absentee:<br>${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}`
-            if (event.target.id == x) {
+            if (event.target.id != x) {
+                e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+                ToD: ${dataStorage.studyReports[y][x].teacher}<hr>
+                Study: ${dataStorage.studyReports[y][x].study}<hr>
+                Date: ${dataStorage.studyReports[y][x].date}<hr>
+                Absentee:<br>${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}`
+            } else {
                 f.click()
             }
         });
@@ -945,7 +922,6 @@ document.getElementById("studyReportBtn").onclick = function () {
                 closeBtn.click();
                 dataStorage.studyReports[date] = {}
                 dataStorage.studyReports[date][ts] = data;
-                loadStudyReports()
             });
         } else {
             alert("Please fill up all the information");
@@ -955,7 +931,7 @@ document.getElementById("studyReportBtn").onclick = function () {
 
 // Staff Profile
 var staffProfileRedDot = undefined;
-var staffProfileAddRedDot = undefined;
+var staffProfileAddRedDot = [];
 function loadStaffProfiles() {
     document.getElementById("staffProfileDiv").innerHTML = "";
     document.getElementById("staffProfileDiv").appendChild(at)
@@ -1127,3 +1103,53 @@ document.getElementById("staffProfileBtn").onclick = function () {
 };
 
 // Handle Database Updates
+onDataUpdate(`announcements/${getTodayDate()}`, function(res) {
+    if (res != undefined && res != null) {
+        dataStorage.announcements[getTodayDate()] = res;
+    } else {
+        dataStorage.announcements = {}
+        localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
+        for (let g of Object.keys(announcementsRedDotList)) {
+            announcementsRedDotList[g].remove()
+            delete announcementsRedDotList[g]
+        }
+        if (announcementsRedDot != undefined) {
+            announcementsRedDot.remove();
+            announcementsRedDot = undefined;
+        }
+        removeMenuRedDot();
+    }
+    if (getScreen() != null && getScreen().id == "Announcements") {
+        loadAnnouncements()
+    }
+})
+onDataUpdate(`casualLeaves/${getTodayDate()}`, function(res) {
+    if (res != undefined && res != null) {
+        dataStorage.casualLeaves[getTodayDate()] = res;
+    } else {
+        dataStorage.casualLeaves = {}
+    }
+    if (getScreen() != null && getScreen().id == "Casual Leave") {
+        loadCasualLeaves()
+    }
+})
+onDataUpdate(`inCampusLeaves/${getTodayDate()}`, function(res) {
+    if (res != undefined && res != null) {
+        dataStorage.inCampusLeaves[getTodayDate()] = res;
+    } else {
+        dataStorage.inCampusLeaves = {}
+    }
+    if (getScreen() != null && getScreen().id == "In Campus Leave") {
+        loadInCampusLeaves()
+    }
+})
+onDataUpdate(`studyReports/${getTodayDate()}`, function(res) {
+    if (res != undefined && res != null) {
+        dataStorage.inCampusLeaves[getTodayDate()] = res;
+    } else {
+        dataStorage.inCampusLeaves = {}
+    }
+    if (getScreen() != null && getScreen().id == "Study Report") {
+        loadStudyReports()
+    }
+})
