@@ -1,11 +1,3 @@
-// TODO
-/*
-line 1143
-Add the data update feature
-Make the GUI a little better with stylings.
-*/
-
-
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -57,7 +49,6 @@ function writeData(path, data, code) {
         code();
     });
 };
-
 function deleteData(path, code) {
     remove(ref(database, path)).then(() => {
         code()
@@ -296,6 +287,29 @@ getData("startup", function (res) {
     // About
     document.getElementById("aboutDiv").innerHTML = data.aboutSchool.replaceAll("\n", "<br>");
 
+    // Attendance
+    var classes = data.attendance;
+    console.log(JSON.stringify(classes))
+    let sortedKeys = Object.keys(classes)
+    .map(key => ({ key, length: key.length }))
+    .sort((a, b) => a.length - b.length)
+    .map(obj => obj.key);
+    classes = sortedKeys.reduce((acc, key) => {
+        acc[key] = classes[key];
+        return acc;
+    }, {});
+
+    document.getElementById("classListHolder").innerHTML = "";
+    for (let a of Object.keys(classes)) {
+        let btn = document.createElement("button");
+        btn.style = "margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 7.5vw;";
+        btn.innerHTML = a;
+        document.getElementById("classListHolder").appendChild(btn);
+        btn.onclick = function() {
+            window.open(classes[a], "_blank")
+        };
+    };
+
     // Staff Profile
     if (data.users == undefined) {
         data.users = {};
@@ -463,51 +477,6 @@ function listLoad(data, divElem, code, oncl) {
         b.innerHTML = "No Data"
         document.getElementById(divElem).insertBefore(b, document.getElementById(divElem).firstChild);
     }
-};
-
-// Class Attendance
-var classes = [
-    {"class":"12 A", link: "https://tinyurl.com/3pcez7rs"},
-    {"class":"12 B", link: "https://tinyurl.com/t3u3yfsr"},
-    {"class":"12 C", link: "https://tinyurl.com/5fdfdtyy"},
-    {"class":"12 D", link: "https://tinyurl.com/24rh79b9"},
-    {"class":"12 E", link: "https://tinyurl.com/4f5twbsn"},
-    {"class":"11 A", link: "https://bit.ly/3EPxhs0"},
-    {"class":"11 B", link: "https://bit.ly/3EIVEYc"},
-    {"class":"11 C", link: "https://bit.ly/3ZDsD8H"},
-    {"class":"11 D", link: "https://bit.ly/3mFJ3z5"},
-    {"class":"11 E", link: "https://bit.ly/41A5Qfq"},
-    {"class":"10 A", link: "https://bit.ly/3FdDcY4"},
-    {"class":"10 B", link: "https://tinyurl.com/5ejfasxy"},
-    {"class":"10 C", link: "https://tinyurl.com/yskx9h4c"},
-    {"class":"10 D", link: "https://bit.ly/3y17fy6"},
-    {"class":"10 E", link: "https://tinyurl.com/bdee495t"},
-    {"class":"9 A", link: "https://tinyurl.com/yc4r6z3r"},
-    {"class":"9 B", link: "https://tinyurl.com/2p93jt88"},
-    {"class":"9 C", link: "https://tinyurl.com/558mdcpc"},
-    {"class":"9 D", link: "https://tinyurl.com/5hcbwdy2"},
-    {"class":"9 E", link: "https://bit.ly/3IOVboS"},
-    {"class":"8 A", link: "https://tinyurl.com/586u3p3j"},
-    {"class":"8 B", link: "https://tinyurl.com/ysft64v6"},
-    {"class":"8 C", link: "https://tinyurl.com/mvns73cx"},
-    {"class":"7 A", link: "https://tinyurl.com/2z2cnup9"},
-    {"class":"7 B", link: "https://bit.ly/3me8SpF"},
-    {"class":"7 C", link: "https://bit.ly/3J5SW0q"}
-];
-// var classes = ["12 A", "12 B", "12 C", "12 D", "12 E", "11 A", "11 B", "11 C", "11 D", "11 E", "10 A", "10 B", "10 C", "10 D", "10 E", "9 A", "9 B", "9 C", "9 D", "9 E", "8 A", "8 B", "8 C", "7 A", "7 B", "7 C"];
-document.getElementById("classListHolder").innerHTML = "";
-for (let a = 0; a < classes.length; a++) {
-    let btn = document.createElement("button");
-    btn.style = "margin: 2%; width: 45%; border-radius: 15px; background-color: black; color: white; font-weight: bolder; font-size: 7.5vw;";
-    btn.id = "attendanceBtn" + a;
-    btn.innerHTML = classes[a]["class"];
-    document.getElementById("classListHolder").appendChild(btn);
-    btn.onclick = function() {
-        let g = document.createElement("a");
-        g.href = classes[a]["link"];
-        g.target = "_blank"
-        g.click();
-    };
 };
 
 // Announcements
@@ -1161,9 +1130,9 @@ onDataUpdate(`inCampusLeaves/${getTodayDate()}`, function(res) {
 })
 onDataUpdate(`studyReports/${getTodayDate()}`, function(res) {
     if (res != undefined && res != null) {
-        dataStorage.inCampusLeaves[getTodayDate()] = res;
+        dataStorage.studyReports[getTodayDate()] = res;
     } else {
-        dataStorage.inCampusLeaves = {}
+        dataStorage.studyReports = {}
     }
     if (getScreen() != null && getScreen().id == "Study Report") {
         loadStudyReports()
