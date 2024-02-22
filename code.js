@@ -1,3 +1,11 @@
+// TODO
+/*
+line 1143
+Add the data update feature
+Make the GUI a little better with stylings.
+*/
+
+
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -336,7 +344,6 @@ var navList = [
     { label: "In Campus Leave", logo: "./assets/sandglass.svg" },
     { label: "Study Report", logo: "./assets/report.svg" },
     { label: "Staff Profile", logo: "./assets/book.svg" },
-    { label: "Staff Attendance", logo: "./assets/attendance.svg" },
     { label: "Contacts", logo: "./assets/contacts.svg" },
     { label: "About", logo: "./assets/about.svg" }
 ];
