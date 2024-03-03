@@ -9,15 +9,16 @@ if ("serviceWorker" in navigator) {
 }
 
 // App installer
-let deferredPrompt;
+var deferredPrompt;
 
 // Listen for the 'beforeinstallprompt' event
 window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
 });
 
-if (document.getElementById("installButton") != null) {
-    document.getElementById("installButton").onclick = function() {
+if (document.getElementById("install-button") != null) {
+    document.getElementById("install-button").onclick = function() {
+        console.log(deferredPrompt)
         if (deferredPrompt) {
             // Show the installation prompt
             deferredPrompt.prompt();
@@ -34,6 +35,9 @@ if (document.getElementById("installButton") != null) {
             });
         }
     };
+    document.getElementById("close-button").onclick = function() {
+        document.getElementById("install-banner").remove();
+    }
 };
 
 // Firebase
