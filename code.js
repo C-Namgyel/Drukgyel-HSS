@@ -14,11 +14,29 @@ var deferredPrompt;
 // Listen for the 'beforeinstallprompt' event
 window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
-});
 
-if (document.getElementById("install-button") != null) {
-    document.getElementById("install-button").onclick = function() {
-        console.log(deferredPrompt)
+    let installBanner = document.createElement("div");
+    installBanner.style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #0989EC; color: white; padding-top: 5%; padding-bottom: 5%; text-align: center; z-index: 1000;";
+    let img = document.createElement("img");
+    img.src = "assets/logo.png";
+    img.style = "height: 12vw; vertical-align: middle;";
+    img.alt = "Drukgyel HSS";
+    let span = document.createElement("span");
+    span.style = "margin-left: 10px; font-size: 5vw;";
+    span.innerHTML = "Install Drukgyel HSS";
+    let installButton = document.createElement("button");
+    installButton.style = "margin-left: 10px; background-color: white; color: #0989EC; border: none; padding: 5px 10px; cursor: pointer; border-radius: 5px; font-size: 3vw;";
+    installButton.innerHTML = "Install";
+    let closeButton = document.createElement("button");
+    closeButton.style = "background-color: transparent; color: white; border: none; cursor: pointer; position: absolute; top: 5px; right: 0%; background-color: red; font-size: 3vw;";
+    closeButton.innerHTML = "&times;";
+    installBanner.appendChild(img);
+    installBanner.appendChild(span);
+    installBanner.appendChild(installButton);
+    installBanner.appendChild(closeButton);
+    document.body.appendChild(installBanner);
+
+    installButton.onclick = function() {
         if (deferredPrompt) {
             // Show the installation prompt
             deferredPrompt.prompt();
@@ -35,10 +53,10 @@ if (document.getElementById("install-button") != null) {
             });
         }
     };
-    document.getElementById("close-button").onclick = function() {
-        document.getElementById("install-banner").remove();
+    closeButton.onclick = function() {
+        installBanner.remove();
     }
-};
+});
 
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
