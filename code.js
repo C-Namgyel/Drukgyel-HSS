@@ -231,6 +231,16 @@ function removeMenuRedDot() {
         menuRedDot = undefined;
     }
 }
+function filterObject(obj, searchTerm) {
+    searchTerm = searchTerm.toLowerCase();
+    return Object.fromEntries(
+        Object.entries(obj).filter(([key, value]) => {
+            return Object.values(value).some(val =>
+                typeof val === 'string' && val.toLowerCase().includes(searchTerm)
+            );
+        })
+    );
+}
 
 // Setup startup screen
 function startup() {
@@ -296,28 +306,41 @@ var loading = "loading"
 if ((navigator.onLine ? "Online" : "Offline") == "Offline") {
     loading = "Failed"
 }
-document.getElementById("splashLogo").onanimationend = function () {
-    setTimeout(function () {
-        splash = true;
-        if (Object.keys(data).length != 0) {
-            document.getElementById("splashDiv").remove();
-            loading = "Loaded";
-            startup()
-        } else {
-            if (loading == "loading") {
-                document.getElementById("splashLoad").innerHTML = "Loading Data<br>Please Wait";
+var splashed = false;
+function splashEnded() {
+    if (splashed == false) {
+        splashed = true;
+        console.log("Splash came to an end")
+        setTimeout(function () {
+            console.log("Splash Done")
+            splash = true;
+            if (Object.keys(data).length != 0) {
+                document.getElementById("splashDiv").remove();
+                loading = "Loaded";
+                startup()
             } else {
-                document.getElementById("splashLoad").innerHTML = "No Internet Connection";
-            }
-            setTimeout(function() {
                 if (loading == "loading") {
-                    document.getElementById("splashLoad").innerHTML = "Unstable Network<br>Please Try Again Later";
+                    document.getElementById("splashLoad").innerHTML = "Loading Data<br>Please Wait";
+                } else {
+                    document.getElementById("splashLoad").innerHTML = "No Internet Connection";
                 }
-            }, 5000);
-        };
-    }, 500);
+                setTimeout(function() {
+                    if (loading == "loading") {
+                        document.getElementById("splashLoad").innerHTML = "Unstable Network<br>Please Try Again Later";
+                    }
+                }, 5000);
+            };
+        }, 500);
+    }
+}
+document.getElementById("splashLogo").onanimationend = function () {
+    splashEnded()
 };
+setTimeout(function() {
+    splashEnded()
+}, 1500);
 getData("startup", function (res) {
+    console.log("Data Loaded")
     data = res;
 
     // Splash
@@ -441,7 +464,7 @@ for (let d = 0; d < navList.length; d++) {
             } else if (val == "Study Report") {
                 loadStudyReports()
             } else if (val == "Staff Profile") {
-                loadStaffProfiles()
+                loadStaffProfiles(data.users)
             };
             document.getElementById("header").innerHTML = val;
             if (document.getElementById("navBarrier").hidden == false) {
@@ -959,10 +982,9 @@ document.getElementById("studyReportBtn").onclick = function () {
 // Staff Profile
 var staffProfileRedDot = undefined;
 var staffProfileAddRedDot = [];
-function loadStaffProfiles() {
+function loadStaffProfiles(users) {
     document.getElementById("staffProfileDiv").innerHTML = "";
     document.getElementById("staffProfileDiv").appendChild(at)
-    let users = data.users;
     if (users == undefined) {
         users = {}
         data.users = {};
@@ -972,7 +994,15 @@ function loadStaffProfiles() {
             delete users[o];
         }
     }
-    sortObject(users, "name", true)
+    let sortedData = Object.fromEntries(
+        Object.entries(users).sort(([,b], [,a]) => (a.name || '').localeCompare(b.name || ''))
+    );
+    let yourData = sortedData[localStorage.userId];
+    delete sortedData[localStorage.userId];
+    if (yourData != undefined && yourData != "") {
+        sortedData = {[localStorage.userId]: yourData, ...sortedData}
+    }
+    users = sortedData;
     if (Object.keys(users).length == 0) {
         let b = document.createElement("b")
         b.innerHTML = "No Data";
@@ -1018,7 +1048,7 @@ function loadStaffProfiles() {
                             deleteObject(stRef(storage, `staffProfile/${localStorage.userId}/Profile Picture`)).then(() => {
                                 writeData(`startup/users/${localStorage.userId}`, "", function() {
                                     data.users[localStorage.userId] = "";
-                                    loadStaffProfiles()
+                                    loadStaffProfiles(data.users)
                                 })
                             });
                         };
@@ -1111,7 +1141,7 @@ document.getElementById("staffProfileBtn").onclick = function () {
                         writeData(`startup/users/${localStorage.userId}`, tempData, function() {
                             closeBtn.click();
                             data.users[localStorage.userId] = tempData;
-                            loadStaffProfiles()
+                            loadStaffProfiles(data.users)
                             staffProfileAddRedDot.remove()
                             staffProfileAddRedDot = undefined;
                             staffProfileRedDot.remove();
@@ -1128,6 +1158,16 @@ document.getElementById("staffProfileBtn").onclick = function () {
         };
     });
 };
+document.getElementById("staffProfileSearch").oninput = function() {
+    let dat = data.users;
+    for (let i of Object.keys(dat)) {
+        if (dat[i] == "") {
+            delete dat[i]
+        }
+    }
+    let filteredData = filterObject(dat, this.value);
+    loadStaffProfiles(filteredData)
+}
 
 // Handle Database Updates
 onDataUpdate(`announcements/${getTodayDate()}`, function(res) {
