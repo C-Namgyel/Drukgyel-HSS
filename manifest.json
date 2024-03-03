@@ -1,10 +1,10 @@
 {
     "name": "Drukgyel HSS",
-    "short_name": "DHSS",
+    "short_name": "Drukgyel HSS",
     "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#ffffff",
-    "theme_color": "#ffffff",
+    "theme_color": "#000000",
     "orientation": "portrait-primary",
     "icons": [
       {

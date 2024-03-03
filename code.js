@@ -14,7 +14,6 @@ var deferredPrompt;
 // Listen for the 'beforeinstallprompt' event
 window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
-
     let installBanner = document.createElement("div");
     installBanner.style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: #0989EC; color: white; padding-top: 5%; padding-bottom: 5%; text-align: center; z-index: 1000;";
     let img = document.createElement("img");
@@ -35,20 +34,13 @@ window.addEventListener('beforeinstallprompt', (e) => {
     installBanner.appendChild(installButton);
     installBanner.appendChild(closeButton);
     document.body.appendChild(installBanner);
-
     installButton.onclick = function() {
         if (deferredPrompt) {
-            // Show the installation prompt
             deferredPrompt.prompt();
-
-            // Wait for the user's choice
             deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the installation prompt.');
-                } else {
-                    console.log('User dismissed the installation prompt.');
+                    closeButton.click();
                 }
-                // Clear the deferredPrompt variable
                 deferredPrompt = null;
             });
         }
