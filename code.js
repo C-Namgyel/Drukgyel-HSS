@@ -8,6 +8,34 @@ if ("serviceWorker" in navigator) {
     })
 }
 
+// App installer
+let deferredPrompt;
+
+// Listen for the 'beforeinstallprompt' event
+window.addEventListener('beforeinstallprompt', (e) => {
+    deferredPrompt = e;
+});
+
+if (document.getElementById("installButton") != null) {
+    document.getElementById("installButton").onclick = function() {
+        if (deferredPrompt) {
+            // Show the installation prompt
+            deferredPrompt.prompt();
+
+            // Wait for the user's choice
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the installation prompt.');
+                } else {
+                    console.log('User dismissed the installation prompt.');
+                }
+                // Clear the deferredPrompt variable
+                deferredPrompt = null;
+            });
+        }
+    };
+};
+
 // Firebase
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-app.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.2/firebase-analytics.js";
@@ -299,7 +327,6 @@ getData("startup", function (res) {
 
     // Attendance
     var classes = data.attendance;
-    console.log(JSON.stringify(classes))
     let sortedKeys = Object.keys(classes)
     .map(key => ({ key, length: key.length }))
     .sort((a, b) => a.length - b.length)
