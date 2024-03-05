@@ -432,6 +432,7 @@ var navList = [
     { label: "In Campus Leave", logo: "./assets/sandglass.svg" },
     { label: "Study Report", logo: "./assets/report.svg" },
     { label: "Staff Profile", logo: "./assets/book.svg" },
+    { label: "Infraction Records", logo: "./assets/report.svg" },
     { label: "Contacts", logo: "./assets/contacts.svg" },
     { label: "About", logo: "./assets/about.svg" }
 ];
@@ -465,6 +466,11 @@ for (let d = 0; d < navList.length; d++) {
                 loadStudyReports()
             } else if (val == "Staff Profile") {
                 loadStaffProfiles(data.users)
+            } else if (val == "Infraction Records") {
+                openIR();
+                setTimeout(function() {
+                    document.getElementById("School Profile Btn").click();
+                }, 250)
             };
             document.getElementById("header").innerHTML = val;
             if (document.getElementById("navBarrier").hidden == false) {
@@ -979,6 +985,11 @@ document.getElementById("studyReportBtn").onclick = function () {
     });
 };
 
+//Infraction Records
+function openIR() {
+    window.open("https://forms.gle/5hEPCF5U1855uS2W6");
+}
+
 // Staff Profile
 var staffProfileRedDot = undefined;
 var staffProfileAddRedDot = [];
@@ -1000,7 +1011,7 @@ function loadStaffProfiles(users) {
     let yourData = sortedData[localStorage.userId];
     delete sortedData[localStorage.userId];
     if (yourData != undefined && yourData != "") {
-        sortedData = {[localStorage.userId]: yourData, ...sortedData}
+        sortedData = {...sortedData, [localStorage.userId]: yourData}
     }
     users = sortedData;
     if (Object.keys(users).length == 0) {
