@@ -1205,7 +1205,9 @@ onDataUpdate(`announcements/${getTodayDate()}`, function(res) {
                 menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
             }
             if (announcementsRedDot == undefined) {
-                announcementsRedDot = redDot(document.getElementById("Announcements Btn"), `0%`, `0%`)
+                if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(Object.keys(res)[Object.keys(res).length - 1]) == false) {
+                    announcementsRedDot = redDot(document.getElementById("Announcements Btn"), `0%`, `0%`)
+                }
             }
         }
     }
