@@ -242,6 +242,39 @@ function filterObject(obj, searchTerm) {
     );
 }
 
+function getLocalStorage(key) {
+    let read = localStorage[root];
+    try {
+        read = JSON.parse(read);
+    } catch {
+        read = {};
+    }
+    if (read != undefined && typeof read == "object") {
+        let dat = read;
+        return(dat[key]);
+    } else {
+        localStorage[root] = JSON.stringify({});
+        return({})
+    }
+}
+function setLocalStorage(key, value) {
+    let read = localStorage[root];
+    try {
+        read = JSON.parse(read)
+    } catch {
+        read = read;
+    }
+    if (read != undefined && typeof read == "object") {
+        let dat = JSON.parse(localStorage[root]);
+        dat[key] = value;
+        localStorage[root] = JSON.stringify(dat);
+        return(getLocalStorage(key));
+    } else {
+        localStorage[root] = JSON.stringify({});
+        setLocalStorage(key, value);
+    }
+}
+
 // Setup startup screen
 function startup() {
     let urlParams = new URLSearchParams(window.location.search);
@@ -255,7 +288,7 @@ function startup() {
             document.getElementById("School Profile Btn").click();
         };
     };
-    if (localStorage.userId == undefined) {
+    if (getLocalStorage("userId") == undefined) {
         let users = data.users;
         function createUID() {
             let chars = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -264,7 +297,10 @@ function startup() {
                 uid += chars[Math.floor(Math.random() * (35 - 0 + 1) + 0)]
             }
             if ((users == undefined) || (uid in users == false)) {
-                localStorage.userId = uid;
+                setLocalStorage("userId", uid);
+                staffProfileRedDot = redDot(document.getElementById("Staff Profile Btn"), `0%`, `0%`)
+                menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
+                staffProfileAddRedDot = redDot(document.getElementById("staffProfileBtn"), `15%`, `15%`);
                 writeData(`startup/users/${uid}`, "", function() {
                     if (users == undefined) {
                         users = {}
@@ -278,7 +314,8 @@ function startup() {
         createUID()
     } else {
         let users = data.users;
-        let uid = localStorage.userId
+        let uid = getLocalStorage("userId");
+        console.log(uid)
         if ((uid in users) == false || users == undefined) {
             writeData(`startup/users/${uid}`, "", function() {
                 if (users == undefined) {
@@ -293,12 +330,14 @@ function startup() {
 // Global Variables
 var data = {};
 var dataStorage = {
+    FUT: {},
     announcements: {},
     casualLeaves: {},
     inCampusLeaves: {},
     studyReports: {}
 }
 var menuRedDot = undefined;
+var root = "c-namgyel.github.io/Drukgyel-HSS";
 
 // Splash Screen
 var splash = false;
@@ -310,9 +349,7 @@ var splashed = false;
 function splashEnded() {
     if (splashed == false) {
         splashed = true;
-        console.log("Splash came to an end")
         setTimeout(function () {
-            console.log("Splash Done")
             splash = true;
             if (Object.keys(data).length != 0) {
                 document.getElementById("splashDiv").remove();
@@ -340,7 +377,6 @@ setTimeout(function() {
     splashEnded()
 }, 1500);
 getData("startup", function (res) {
-    console.log("Data Loaded")
     data = res;
 
     // Splash
@@ -388,8 +424,8 @@ getData("startup", function (res) {
     if (data.users == undefined) {
         data.users = {};
     }
-    if (Object.keys(data.users).includes(localStorage.userId)) {
-        if (data.users[localStorage.userId] == "") {
+    if (Object.keys(data.users).includes(getLocalStorage("userId"))) {
+        if (data.users[getLocalStorage("userId")] == "") {
             staffProfileRedDot = redDot(document.getElementById("Staff Profile Btn"), `0%`, `0%`)
             menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
             staffProfileAddRedDot = redDot(document.getElementById("staffProfileBtn"), `15%`, `15%`);
@@ -414,11 +450,11 @@ getData("startup", function (res) {
 });
 
 // Announcements Load at startup
-if (localStorage.readAnnouncements == undefined) {
-    localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
+if (getLocalStorage("readAnnouncements") == undefined) {
+    setLocalStorage("readAnnouncements", `{"${getTodayDate()}": []}`);
 } else {
-    if (Object.keys(JSON.parse(localStorage.readAnnouncements))[0] != getTodayDate()) {
-        localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
+    if (Object.keys(getLocalStorage("readAnnouncements"))[0] != getTodayDate()) {
+        setLocalStorage("readAnnouncements", `{"${getTodayDate()}": []}`);
     }
 }
 
@@ -427,6 +463,7 @@ var navList = [
     { label: "School Profile", logo: "./assets/home.svg" },
     { label: "About School", logo: "./assets/home.svg" },
     { label: "Class Attendance", logo: "./assets/attendance.svg" },
+    { label: "First Unit Test", logo: "./assets/report.svg" },
     { label: "Announcements", logo: "./assets/announcement.svg" },
     { label: "Casual Leave", logo: "./assets/sandglass.svg" },
     { label: "In Campus Leave", logo: "./assets/sandglass.svg" },
@@ -456,7 +493,9 @@ for (let d = 0; d < navList.length; d++) {
         let val = a.value.replace(" Btn", "")
         if (setScreen(val) == true) {
             // Load Datas and display in screen
-            if (val == "Announcements") {
+            if (val == "First Unit Test") {
+                loadFUT()
+            } else if (val == "Announcements") {
                 loadAnnouncements()
             } else if (val == "Casual Leave") {
                 loadCasualLeaves()
@@ -559,6 +598,103 @@ function listLoad(data, divElem, code, oncl) {
     }
 };
 
+// First Unit Test
+function loadFUT() {
+    let dateToday = document.getElementById("FUTFilter").value;
+    function startIt(dT) {
+        let toLoad = {}
+        toLoad[dT] = dataStorage.FUT[dT];
+        listLoad(toLoad, "FUTDiv", function(div, x, y) {
+            div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${getTime(x)}</a>
+            <b style="font-size: 5vw; display: block;">${dataStorage.FUT[y][x].invigilator}</b>
+            <b style="font-size: 4vw;">Exam Hall: ${dataStorage.FUT[y][x].examHall}</b>
+            <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.FUT[y][x].remarks}</b><br>
+            <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
+            if (dataStorage.FUT[y][x].uid == getLocalStorage("userId") && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+                let delBtn = document.createElement("button");
+                delBtn.id = x;
+                delBtn.innerHTML = "Delete Data";
+                div.appendChild(document.createElement("br"))
+                div.appendChild(document.createElement("br"))
+                div.appendChild(delBtn)
+                delBtn.onclick = function() {
+                    verify("Are you sure you want to delete this data?", function(conf) {
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Deleting"
+                            deleteData(`FUT/${y}/${x}`, function() {})
+                        };
+                    });
+                }
+            }
+        }, function(e, x, y, f, event) {
+            if (event.target.id != x) {
+                // Change the display
+                e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+                Invigilator: ${dataStorage.FUT[y][x].invigilator}<hr>
+                Exam Hall: ${dataStorage.FUT[y][x].examHall}<hr>
+                Absentee: <br>${dataStorage.FUT[y][x].absentee.replaceAll("\n", "<br>")}<hr>
+                Missing Page: <br>${dataStorage.FUT[y][x].missingPages.replaceAll("\n", "<br>")}<hr>
+                Question Paper Required: <br>${dataStorage.FUT[y][x].required.replaceAll("\n", "<br>")}<hr>
+                Remarks: ${dataStorage.FUT[y][x].remarks}`
+            } else {
+                f.click()
+            }
+        });
+    };
+    if (Object.keys(dataStorage.FUT).includes(dateToday)) {
+        startIt(dateToday);
+    } else {
+        document.getElementById("FUTDiv").innerHTML = "Getting Data. Please wait."
+        getData(`FUT/${dateToday}`, function(res) {
+            if (Object.keys(res).length != 0) {
+                dataStorage.FUT[dateToday] = res;
+                startIt(dateToday);
+            } else {
+                dataStorage.FUT[dateToday] = {};
+                document.getElementById("FUTDiv").innerHTML = "<b>No Data</b>";
+            };
+        })
+    }
+}
+document.getElementById("FUTBtn").onclick = function () {
+    let csElem = createPrompt();
+    let holder = csElem[0];
+    let closeBtn = csElem[1];
+    titleText(holder, "First Unit Test");
+    let FUTInvigilator = textInput(holder, "Invigilator");
+    let FUTExamHall = dropdown(holder, "Exam Hall", ["7A","7B","7C","8A","8B","8C","9A","9B","9C","9D","9E","10A","10B","10C","10D","10E","11A","11B","11C","11D","11E","12A","12B","12C","12D","12E"]);
+    let FUTAbsentee = textArea(holder, "Absentee (Name, Class, Section)");
+    let FUTMissingPage = textArea(holder, "Missing Page (Class, Section, Subject, Page Number)");
+    let FUTQPRequired = textArea(holder, "Question Paper Required (Class, Section, Subject, Quantity)");
+    let FUTRemarks = textInput(holder, "Remarks (Optional)");
+    let uploadBtn = button(holder, "Upload", function() {
+        let time = new Date();
+        let ts = Date.now();
+        let data = {
+            uid: getLocalStorage("userId"),
+            invigilator: FUTInvigilator.value.trim(),
+            examHall: FUTExamHall.value.trim(),
+            absentee: FUTAbsentee.value.trim(),
+            missingPages: FUTMissingPage.value.trim(),
+            required: FUTQPRequired.value.trim(),
+            remarks: FUTRemarks.value.trim()
+        };
+        if (data.invigilator != "" && data.examHall != "" && data.absentee != "" && data.missingPages != "" && data.required != "") {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = "Uploading...";
+            let date = `${time.getFullYear()}-${(time.getMonth() + 1).toString().padStart(2, "0")}-${time.getDate().toString().padStart(2, "0")}`
+            writeData(`FUT/${date}/${ts}`, data, function() {
+                closeBtn.click();
+                dataStorage.FUT[date] = {}
+                dataStorage.FUT[date][ts] = data;
+            });
+        } else {
+            notify("Please fill up all the information");
+        };
+    })
+};
+
 // Announcements
 var announcementsRedDot = undefined;
 var announcementsRedDotList = {};
@@ -574,8 +710,8 @@ function loadAnnouncements() {
             <hr style="width: 100%;">
             <b style="display: block; font-size: 5vw; margin-top: 10px;">${dataStorage.announcements[y][x].heading}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open full announcement</a>`;
-            if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(x) == false) {
-                if (dataStorage.announcements[y][x].uid != localStorage.userId) {
+            if (JSON.parse(getLocalStorage("readAnnouncements"))[getTodayDate()].includes(x) == false) {
+                if (dataStorage.announcements[y][x].uid != getLocalStorage("userId")) {
                     let annRed = redDot(div, "90%", "10%")
                     announcementsRedDotList[x] = annRed;
                     if (menuRedDot == undefined) {
@@ -586,7 +722,7 @@ function loadAnnouncements() {
                     }
                 }
             }
-            if (dataStorage.announcements[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+            if (dataStorage.announcements[y][x].uid == getLocalStorage("userId") && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
                 let delBtn = document.createElement("button");
                 delBtn.id = x;
                 delBtn.innerHTML = "Delete Announcement";
@@ -594,20 +730,21 @@ function loadAnnouncements() {
                 div.appendChild(document.createElement("br"))
                 div.appendChild(delBtn)
                 delBtn.onclick = function() {
-                    let conf = confirm("Are you sure you want to delete this announcement?")
-                    if (conf == true) {
-                        delBtn.disabled = true;
-                        delBtn.innerHTML = "Deleting"
-                        deleteData(`announcements/${y}/${x}`, function() {})
-                    };
+                    verify("Are you sure you want to delete this announcement?", function(conf) {
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Deleting"
+                            deleteData(`announcements/${y}/${x}`, function() {})
+                        };
+                    });
                 }
             }
         }, function(e, x, y, f, event) {
             if (event.target.id != x) {
                 e.innerHTML = `From ${dataStorage.announcements[y][x].name} at ${getTime(x)}<br><br>To ${dataStorage.announcements[y][x].to}<br><br>Heading:  ${dataStorage.announcements[y][x].heading}<br><br>${dataStorage.announcements[y][x].message.replaceAll("\n", "<br>")}`
-                let tempJson = JSON.parse(localStorage.readAnnouncements)
+                let tempJson = JSON.parse(getLocalStorage("readAnnouncements"))
                 tempJson[getTodayDate()].push(x)
-                localStorage.readAnnouncements = JSON.stringify(tempJson)
+                setLocalStorage("readAnnouncements", JSON.stringify(tempJson))
                 if (announcementsRedDotList[x] != undefined) {
                     announcementsRedDotList[x].remove();
                     delete announcementsRedDotList[x];
@@ -646,20 +783,22 @@ document.getElementById("announcementBtn").onclick = function () {
     let annTo = dropdown(holder, "Announcement for", ["Captains", "Everyone", "Students", "Teachers", "Others"])
     annTo.onchange = function() {
         if (annTo.value == "Others") {
-            let to = "";
-            while (to.trim() == "") {
-                to = prompt("This announcement is for: ")
-                if (to == null) {
-                    annTo.firstChild.selected = true;
-                    break;
-                } else if (to.trim() != "") {
-                    let elem = document.createElement("option");
-                    elem.innerHTML = to;
-                    elem.style = "color: black;"
-                    elem.selected = true;
-                    annTo.insertBefore(elem, annTo.lastChild);
-                }
+            function sss() {
+                inquire("This announcement is for:", "", function(to) {
+                    if (to == null) {
+                        annTo.firstChild.selected = true;
+                    } else if (to.trim() != "") {
+                        let elem = document.createElement("option");
+                        elem.innerHTML = to;
+                        elem.style = "color: black;"
+                        elem.selected = true;
+                        annTo.insertBefore(elem, annTo.lastChild);
+                    } else {
+                        sss();
+                    }
+                })
             }
+            sss();
         }
     }
     let annHeading = textInput(holder, "Heading")
@@ -668,7 +807,7 @@ document.getElementById("announcementBtn").onclick = function () {
         let time = new Date();
         let ts = Date.now();
         let data = {
-            uid: localStorage.userId,
+            uid: getLocalStorage("userId"),
             name: annName.value.trim(),
             to: annTo.value.trim(),
             heading: annHeading.value.trim(),
@@ -679,9 +818,6 @@ document.getElementById("announcementBtn").onclick = function () {
             uploadBtn.innerHTML = "Uploading...";
             let date = `${time.getFullYear()}-${(time.getMonth() + 1).toString().padStart(2, "0")}-${time.getDate().toString().padStart(2, "0")}`
             writeData(`announcements/${date}/${ts}`, data, function() {
-                // let tempJson = JSON.parse(localStorage.readAnnouncements)
-                // tempJson[getTodayDate()].push(""+ts)
-                // localStorage.readAnnouncements = JSON.stringify(tempJson)
                 closeBtn.click();
                 if (dataStorage.announcements[date] == undefined) {
                     dataStorage.announcements[date] = {};
@@ -689,7 +825,7 @@ document.getElementById("announcementBtn").onclick = function () {
                 dataStorage.announcements[date][ts] = data;
             });
         } else {
-            alert("Please fill up all the information");
+            notify("Please fill up all the information");
         };
     })
 };
@@ -706,7 +842,7 @@ function loadCasualLeaves() {
             <b style="font-size: 4vw;">Reason: ${dataStorage.casualLeaves[y][x].reason}</b>
             <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.casualLeaves[y][x].type}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
-            if (dataStorage.casualLeaves[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+            if (dataStorage.casualLeaves[y][x].uid == getLocalStorage("userId") && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
                 let delBtn = document.createElement("button");
                 delBtn.id = x;
                 delBtn.innerHTML = "Cancel Leave";
@@ -714,12 +850,13 @@ function loadCasualLeaves() {
                 div.appendChild(document.createElement("br"))
                 div.appendChild(delBtn)
                 delBtn.onclick = function() {
-                    let conf = confirm("Are you sure you want to cancel your leave?")
-                    if (conf == true) {
-                        delBtn.disabled = true;
-                        delBtn.innerHTML = "Canceling"
-                        deleteData(`casualLeaves/${y}/${x}`, function() {})
-                    };
+                    verify("Are you sure you want to cancel your leave?", function(conf) {
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Canceling"
+                            deleteData(`casualLeaves/${y}/${x}`, function() {})
+                        };
+                    });
                 }
             }
         }, function(e, x, y, f, event) {
@@ -768,7 +905,7 @@ document.getElementById("casualLeaveBtn").onclick = function () {
         let time = new Date();
         let ts = Date.now();
         let data = {
-            uid: localStorage.userId,
+            uid: getLocalStorage("userId"),
             name: clName.value.trim(),
             type: clType.value,
             duration: clDuration.value,
@@ -786,7 +923,7 @@ document.getElementById("casualLeaveBtn").onclick = function () {
                 dataStorage.casualLeaves[date][ts] = data;
             });
         } else {
-            alert("Please fill up all the information");
+            notify("Please fill up all the information");
         };
     })
 };
@@ -803,7 +940,7 @@ function loadInCampusLeaves() {
             <b style="font-size: 4vw;">Purpose: ${dataStorage.inCampusLeaves[y][x].purpose}</b>
             <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.inCampusLeaves[y][x].period}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
-            if (dataStorage.inCampusLeaves[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+            if (dataStorage.inCampusLeaves[y][x].uid == getLocalStorage("userId") && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
                 let delBtn = document.createElement("button");
                 delBtn.id = x;
                 delBtn.innerHTML = "Cancel Leave";
@@ -811,15 +948,16 @@ function loadInCampusLeaves() {
                 div.appendChild(document.createElement("br"))
                 div.appendChild(delBtn)
                 delBtn.onclick = function() {
-                    let conf = confirm("Are you sure you want to cancel your leave?")
-                    if (conf == true) {
-                        delBtn.disabled = true;
-                        delBtn.innerHTML = "Canceling"
-                        deleteData(`inCampusLeaves/${y}/${x}`, function() {})
-                        .catch((error) => {
-                            console.error("Error deleting data: ", error);
-                        });
-                    };
+                    verify("Are you sure you want to cancel your leave?", function(conf) {
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Canceling"
+                            deleteData(`inCampusLeaves/${y}/${x}`, function() {})
+                            .catch((error) => {
+                                console.error("Error deleting data: ", error);
+                            });
+                        };
+                    });
                 }
             }
         }, function(e, x, y, f, event) {
@@ -873,7 +1011,7 @@ document.getElementById("campusLeaveBtn").onclick = function () {
         let time = new Date();
         let ts = Date.now();
         let data = {
-            uid: localStorage.userId,
+            uid: getLocalStorage("userId"),
             name: clName.value.trim(),
             date: clDate.value,
             time: clTime.value,
@@ -890,7 +1028,7 @@ document.getElementById("campusLeaveBtn").onclick = function () {
                 dataStorage.inCampusLeaves[date][ts] = data;
             });
         } else {
-            alert("Please fill up all the information");
+            notify("Please fill up all the information");
         };
     });
 };
@@ -907,7 +1045,7 @@ function loadStudyReports() {
             <b style="font-size: 4vw; color: #3A3B3C;">${dataStorage.studyReports[y][x].study}</b>
             <b style="display: block; font-size: 4vw; margin-top: 10px;">${dataStorage.studyReports[y][x].absentee.replaceAll("\n", "<br>")}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
-            if (dataStorage.studyReports[y][x].uid == localStorage.userId && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+            if (dataStorage.studyReports[y][x].uid == getLocalStorage("userId") && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
                 let delBtn = document.createElement("button");
                 delBtn.id = x;
                 delBtn.innerHTML = "Delete Report";
@@ -915,12 +1053,13 @@ function loadStudyReports() {
                 div.appendChild(document.createElement("br"))
                 div.appendChild(delBtn)
                 delBtn.onclick = function() {
-                    let conf = confirm("Are you sure you want to delete this report?")
-                    if (conf == true) {
-                        delBtn.disabled = true;
-                        delBtn.innerHTML = "Deleting"
-                        deleteData(`studyReports/${y}/${x}`, function() {})
-                    };
+                    verify("Are you sure you want to delete this report?", function(conf) {
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Deleting"
+                            deleteData(`studyReports/${y}/${x}`, function() {})
+                        };
+                    });
                 }
             }
         }, function(e, x, y, f, event) {
@@ -964,7 +1103,7 @@ document.getElementById("studyReportBtn").onclick = function () {
         let time = new Date();
         let ts = Date.now();
         let data = {
-            uid: localStorage.userId,
+            uid: getLocalStorage("userId"),
             teacher: srTeacher.value.trim(),
             date: srDate.value,
             study: srStudy.value,
@@ -980,7 +1119,7 @@ document.getElementById("studyReportBtn").onclick = function () {
                 dataStorage.studyReports[date][ts] = data;
             });
         } else {
-            alert("Please fill up all the information");
+            notify("Please fill up all the information");
         };
     });
 };
@@ -1008,10 +1147,10 @@ function loadStaffProfiles(users) {
     let sortedData = Object.fromEntries(
         Object.entries(users).sort(([,b], [,a]) => (a.name || '').localeCompare(b.name || ''))
     );
-    let yourData = sortedData[localStorage.userId];
-    delete sortedData[localStorage.userId];
+    let yourData = sortedData[getLocalStorage("userId")];
+    delete sortedData[getLocalStorage("userId")];
     if (yourData != undefined && yourData != "") {
-        sortedData = {...sortedData, [localStorage.userId]: yourData}
+        sortedData = {...sortedData, [getLocalStorage("userId")]: yourData}
     }
     users = sortedData;
     if (Object.keys(users).length == 0) {
@@ -1044,7 +1183,7 @@ function loadStaffProfiles(users) {
                         elem[1].click();
                     }
                 };
-                if (s == localStorage.userId) {
+                if (s == getLocalStorage("userId")) {
                     let delBtn = document.createElement("button");
                     delBtn.id = s;
                     delBtn.innerHTML = "Delete Profile";
@@ -1052,17 +1191,18 @@ function loadStaffProfiles(users) {
                     div.appendChild(document.createElement("br"))
                     div.appendChild(delBtn)
                     delBtn.onclick = function() {
-                        let conf = confirm("Are you sure you want to delete your profile?")
-                        if (conf == true) {
-                            delBtn.disabled = true;
-                            delBtn.innerHTML = "Deleting"
-                            deleteObject(stRef(storage, `staffProfile/${localStorage.userId}/Profile Picture`)).then(() => {
-                                writeData(`startup/users/${localStorage.userId}`, "", function() {
-                                    data.users[localStorage.userId] = "";
-                                    loadStaffProfiles(data.users)
-                                })
-                            });
-                        };
+                        verify("Are you sure you want to delete your profile?", function(conf) {
+                            if (conf == true) {
+                                delBtn.disabled = true;
+                                delBtn.innerHTML = "Deleting"
+                                deleteObject(stRef(storage, `staffProfile/${getLocalStorage("userId")}/Profile Picture`)).then(() => {
+                                    writeData(`startup/users/${getLocalStorage("userId")}`, "", function() {
+                                        data.users[getLocalStorage("userId")] = "";
+                                        loadStaffProfiles(data.users)
+                                    })
+                                });
+                            };
+                        });
                     }
                 }
             }
@@ -1136,7 +1276,7 @@ document.getElementById("staffProfileBtn").onclick = function () {
             if (spFile != undefined) {
                 uploadBtn.disabled = true;
                 uploadBtn.innerHTML = "Uploading Profile Picture"
-                let storageRef = stRef(storage, `staffProfile/${localStorage.userId}/Profile Picture`)
+                let storageRef = stRef(storage, `staffProfile/${getLocalStorage("userId")}/Profile Picture`)
                 let task = uploadBytesResumable(storageRef, spFile);
                 task.on('state_changed', (snapshot) => {
                     let progress = `${(snapshot.bytesTransferred / 1024).toFixed(2)} KB / ${(snapshot.totalBytes / 1024).toFixed(2)} KB`;
@@ -1149,9 +1289,9 @@ document.getElementById("staffProfileBtn").onclick = function () {
                     getDownloadURL(storageRef).then((Url) => {
                         tempData.profilePicture = Url;
                         let ts = Date.now();
-                        writeData(`startup/users/${localStorage.userId}`, tempData, function() {
+                        writeData(`startup/users/${getLocalStorage("userId")}`, tempData, function() {
                             closeBtn.click();
-                            data.users[localStorage.userId] = tempData;
+                            data.users[getLocalStorage("userId")] = tempData;
                             loadStaffProfiles(data.users)
                             staffProfileAddRedDot.remove()
                             staffProfileAddRedDot = undefined;
@@ -1162,10 +1302,10 @@ document.getElementById("staffProfileBtn").onclick = function () {
                     })
                 });
             } else {
-                alert("Please upload a profile picture");
+                notify("Please upload a profile picture");
             };
         } else {
-            alert("Please fill up all the information");
+            notify("Please fill up all the information");
         };
     });
 };
@@ -1181,12 +1321,22 @@ document.getElementById("staffProfileSearch").oninput = function() {
 }
 
 // Handle Database Updates
+onDataUpdate(`FUT/${getTodayDate()}`, function(res) {
+    if (res != undefined && res != null) {
+        dataStorage.FUT[getTodayDate()] = res;
+    } else {
+        dataStorage.FUT = {}
+    }
+    if (getScreen() != null && getScreen().id == "First Unit Test") {
+        loadFUT();
+    }
+})
 onDataUpdate(`announcements/${getTodayDate()}`, function(res) {
     if (res != undefined && res != null) {
         dataStorage.announcements[getTodayDate()] = res;
     } else {
         dataStorage.announcements = {}
-        localStorage.readAnnouncements = `{"${getTodayDate()}": []}`
+        setLocalStorage("readAnnouncements", `{"${getTodayDate()}": []}`);
         for (let g of Object.keys(announcementsRedDotList)) {
             announcementsRedDotList[g].remove()
             delete announcementsRedDotList[g]
@@ -1205,9 +1355,7 @@ onDataUpdate(`announcements/${getTodayDate()}`, function(res) {
                 menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
             }
             if (announcementsRedDot == undefined) {
-                if (JSON.parse(localStorage.readAnnouncements)[getTodayDate()].includes(Object.keys(res)[Object.keys(res).length - 1]) == false) {
-                    announcementsRedDot = redDot(document.getElementById("Announcements Btn"), `0%`, `0%`)
-                }
+                announcementsRedDot = redDot(document.getElementById("Announcements Btn"), `0%`, `0%`)
             }
         }
     }
@@ -1240,5 +1388,23 @@ onDataUpdate(`studyReports/${getTodayDate()}`, function(res) {
     }
     if (getScreen() != null && getScreen().id == "Study Report") {
         loadStudyReports()
+    }
+})
+
+// For in-app notfications
+onDataUpdate(`in-app-notifications`, function(res) {
+    if (res != undefined && res != null) {
+        for (let x of Object.keys(res)) {
+            if (getLocalStorage("in-app-notifications") == undefined) {
+                setLocalStorage("in-app-notifications", []);
+            }
+            if (getLocalStorage("in-app-notifications").includes(x) == false) {
+                console.log(res[x])
+                notify(res[x]["message"]);
+                let temp = getLocalStorage("in-app-notifications");
+                temp.push(x)
+                setLocalStorage("in-app-notifications", temp)
+            }
+        }
     }
 })
