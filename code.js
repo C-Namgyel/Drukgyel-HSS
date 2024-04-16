@@ -337,7 +337,7 @@ var dataStorage = {
     studyReports: {}
 }
 var menuRedDot = undefined;
-var root = "c-namgyel.github.io/Drukgyel-HSS";
+var root = "c-namgyel.github.io/Drukgyel-HSS-Beta";
 
 // Splash Screen
 var splash = false;
@@ -664,10 +664,10 @@ document.getElementById("FUTBtn").onclick = function () {
     titleText(holder, "First Unit Test");
     let FUTInvigilator = textInput(holder, "Invigilator");
     let FUTExamHall = dropdown(holder, "Exam Hall", ["7A","7B","7C","8A","8B","8C","9A","9B","9C","9D","9E","10A","10B","10C","10D","10E","11A","11B","11C","11D","11E","12A","12B","12C","12D","12E"]);
-    let FUTAbsentee = textArea(holder, "Absentee (Name, Class, Section)");
-    let FUTMissingPage = textArea(holder, "Missing Page (Class, Section, Subject, Page Number)");
-    let FUTQPRequired = textArea(holder, "Question Paper Required (Class, Section, Subject, Quantity)");
-    let FUTRemarks = textInput(holder, "Remarks (Optional)");
+    let FUTAbsentee = textArea(holder, "Absentee (Name, Class, Section) [Optional]");
+    let FUTMissingPage = textArea(holder, "Missing Page (Class, Section, Subject, Page Number) [Optional]");
+    let FUTQPRequired = textArea(holder, "Question Paper Required (Class, Section, Subject, Quantity) [Optional]");
+    let FUTRemarks = textInput(holder, "Remarks [Optional]");
     let uploadBtn = button(holder, "Upload", function() {
         let time = new Date();
         let ts = Date.now();
@@ -680,7 +680,7 @@ document.getElementById("FUTBtn").onclick = function () {
             required: FUTQPRequired.value.trim(),
             remarks: FUTRemarks.value.trim()
         };
-        if (data.invigilator != "" && data.examHall != "" && data.absentee != "" && data.missingPages != "" && data.required != "") {
+        if (data.invigilator != "" && data.examHall != "") {
             uploadBtn.disabled = true;
             uploadBtn.innerHTML = "Uploading...";
             let date = `${time.getFullYear()}-${(time.getMonth() + 1).toString().padStart(2, "0")}-${time.getDate().toString().padStart(2, "0")}`
@@ -690,7 +690,7 @@ document.getElementById("FUTBtn").onclick = function () {
                 dataStorage.FUT[date][ts] = data;
             });
         } else {
-            notify("Please fill up all the information");
+            notify("Please fill up all the required information");
         };
     })
 };
