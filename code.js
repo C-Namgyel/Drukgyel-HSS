@@ -226,7 +226,7 @@ function redDot(parent, x, y) {
     return(div)
 }
 function removeMenuRedDot() {
-    if (staffProfileRedDot == undefined && announcementsRedDot == undefined && FUTRedDot == undefined && menuRedDot != undefined) {
+    if (staffProfileRedDot == undefined && announcementsRedDot == undefined && FUTRedDot == undefined && T1RedDot == undefined && menuRedDot != undefined) {
         menuRedDot.remove();
         menuRedDot = undefined;
     }
@@ -330,6 +330,7 @@ function startup() {
 var data = {};
 var dataStorage = {
     FUT: {},
+    T1: {},
     announcements: {},
     casualLeaves: {},
     inCampusLeaves: {},
@@ -470,12 +471,22 @@ if (getLocalStorage("readFUT") == undefined) {
     }2
 }
 
+// T1 Load at startup
+if (getLocalStorage("readT1") == undefined) {
+    setLocalStorage("readT1", {[getTodayDate()]: []});
+} else {
+    if (Object.keys(getLocalStorage("readT1"))[0] != getTodayDate()) {
+        setLocalStorage("readT1", {[getTodayDate()]: []});
+    }2
+}
+
 // Setup the navigation drawer;
 var navList = [
     { label: "School Profile", logo: "./assets/home.svg" },
     { label: "About School", logo: "./assets/home.svg" },
     { label: "Class Attendance", logo: "./assets/attendance.svg" },
-    //{ label: "First Unit Test", logo: "./assets/report.svg" },
+    // { label: "First Unit Test", logo: "./assets/report.svg" },
+    // { label: "Term 1", logo: "./assets/report.svg" },
     { label: "Announcements", logo: "./assets/announcement.svg" },
     { label: "Casual Leave", logo: "./assets/sandglass.svg" },
     { label: "In Campus Leave", logo: "./assets/sandglass.svg" },
@@ -507,6 +518,8 @@ for (let d = 0; d < navList.length; d++) {
             // Load Datas and display in screen
             if (val == "First Unit Test") {
                 loadFUT()
+            } else if (val == "Term 1") {
+                loadT1()
             } else if (val == "Announcements") {
                 loadAnnouncements()
             } else if (val == "Casual Leave") {
@@ -733,6 +746,129 @@ document.getElementById("FUTBtn").onclick = function () {
     })
 };
 
+// Term 1
+var T1RedDot = undefined;
+var T1RedDotList = {};
+function loadT1() {
+    let dateToday = document.getElementById("T1Filter").value;
+    function startIt(dT) {
+        let toLoad = {}
+        toLoad[dT] = dataStorage.T1[dT];
+        listLoad(toLoad, "T1Div", function(div, x, y) {
+            div.innerHTML = `<a style="font-size: 4vw; color: #555; display: block;">${getTime(x)}</a>
+            <b style="font-size: 5vw; display: block;">${dataStorage.T1[y][x].invigilator}</b>
+            <b style="font-size: 4vw;">Exam Hall: ${dataStorage.T1[y][x].examHall}</b>
+            <b style="display: block; font-size: 4vw; margin-top: 10px; color: #3A3B3C;">${dataStorage.T1[y][x].remarks}</b><br>
+            <a style="font-size: 4vw; color: blue;">Click to open more details</a>`
+            if (getLocalStorage("readT1")[getTodayDate()].includes(x) == false) {
+                if (dataStorage.T1[y][x].uid != getLocalStorage("userId")) {
+                    let T1Red = redDot(div, "90%", "10%")
+                    T1RedDotList[x] = T1Red;
+                    if (menuRedDot == undefined) {
+                        menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
+                    }
+                    if (T1RedDot == undefined) {
+                        T1RedDot = redDot(document.getElementById("Term 1 Btn"), `0%`, `0%`)
+                    }
+                }
+            }
+            if (dataStorage.T1[y][x].uid == getLocalStorage("userId") && parseInt(getTimeDifference(Date.now(), parseInt(x)).split("-")[0]) < 1) {
+                let delBtn = document.createElement("button");
+                delBtn.id = x;
+                delBtn.innerHTML = "Delete Data";
+                div.appendChild(document.createElement("br"))
+                div.appendChild(document.createElement("br"))
+                div.appendChild(delBtn)
+                delBtn.onclick = function() {
+                    verify("Are you sure you want to delete this data?", function(conf) {
+                        if (conf == true) {
+                            delBtn.disabled = true;
+                            delBtn.innerHTML = "Deleting"
+                            deleteData(`T1/${y}/${x}`, function() {})
+                        };
+                    });
+                }
+            }
+        }, function(e, x, y, f, event) {
+            if (event.target.id != x) {
+                // Change the display
+                e.innerHTML = `<b style='font-size: 25px;'>Details</b><br><br>
+                Invigilator: ${dataStorage.T1[y][x].invigilator}<hr>
+                Exam Hall: ${dataStorage.T1[y][x].examHall}<hr>
+                Absentee: <br>${dataStorage.T1[y][x].absentee.replaceAll("\n", "<br>")}<hr>
+                Missing Page: <br>${dataStorage.T1[y][x].missingPages.replaceAll("\n", "<br>")}<hr>
+                Question Paper Required: <br>${dataStorage.T1[y][x].required.replaceAll("\n", "<br>")}<hr>
+                Remarks: ${dataStorage.T1[y][x].remarks}`;
+                let tempJson = getLocalStorage("readT1");
+                if (tempJson[getTodayDate()].includes(x) == false) {
+                    tempJson[getTodayDate()].push(x)
+                    setLocalStorage("readT1", tempJson)
+                }
+                if (T1RedDotList[x] != undefined) {
+                    T1RedDotList[x].remove();
+                    delete T1RedDotList[x];
+                    if (Object.keys(T1RedDotList).length == 0) {
+                        T1RedDot.remove();
+                        T1RedDot = undefined;
+                        removeMenuRedDot();
+                    }
+                }
+            } else {
+                f.click()
+            }
+        });
+    };
+    if (Object.keys(dataStorage.T1).includes(dateToday)) {
+        startIt(dateToday);
+    } else {
+        document.getElementById("T1Div").innerHTML = "Getting Data. Please wait."
+        getData(`T1/${dateToday}`, function(res) {
+            if (Object.keys(res).length != 0) {
+                dataStorage.T1[dateToday] = res;
+                startIt(dateToday);
+            } else {
+                dataStorage.T1[dateToday] = {};
+                document.getElementById("T1Div").innerHTML = "<b>No Data</b>";
+            };
+        })
+    }
+}
+document.getElementById("T1Btn").onclick = function () {
+    let csElem = createPrompt();
+    let holder = csElem[0];
+    let closeBtn = csElem[1];
+    titleText(holder, "Term 1");
+    let T1Invigilator = textInput(holder, "Invigilator");
+    let T1ExamHall = dropdown(holder, "Exam Hall", ["7A","7B","7C","8A","8B","8C","9A","9B","9C","9D","9E","10A","10B","10C","10D","10E","11A","11B","11C","11D","11E","12A","12B","12C","12D","12E"]);
+    let T1Absentee = textArea(holder, "Absentee (Name, Class, Section) [Optional]");
+    let T1MissingPage = textArea(holder, "Missing Page (Class, Section, Subject, Page Number) [Optional]");
+    let T1QPRequired = textArea(holder, "Question Paper Required (Class, Section, Subject, Quantity) [Optional]");
+    let T1Remarks = textInput(holder, "Remarks [Optional]");
+    let uploadBtn = button(holder, "Upload", function() {
+        let time = new Date();
+        let ts = Date.now();
+        let data = {
+            uid: getLocalStorage("userId"),
+            invigilator: T1Invigilator.value.trim(),
+            examHall: T1ExamHall.value.trim(),
+            absentee: T1Absentee.value.trim(),
+            missingPages: T1MissingPage.value.trim(),
+            required: T1QPRequired.value.trim(),
+            remarks: T1Remarks.value.trim()
+        };
+        if (data.invigilator != "" && data.examHall != "") {
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = "Uploading...";
+            let date = `${time.getFullYear()}-${(time.getMonth() + 1).toString().padStart(2, "0")}-${time.getDate().toString().padStart(2, "0")}`
+            writeData(`T1/${date}/${ts}`, data, function() {
+                closeBtn.click();
+            });
+        } else {
+            notify("Please fill up all the required information");
+        };
+    })
+};
+
 // Announcements
 var announcementsRedDot = undefined;
 var announcementsRedDotList = {};
@@ -748,7 +884,7 @@ function loadAnnouncements() {
             <hr style="width: 100%;">
             <b style="display: block; font-size: 5vw; margin-top: 10px;">${dataStorage.announcements[y][x].heading}</b><br>
             <a style="font-size: 4vw; color: blue;">Click to open full announcement</a>`;
-            if (getLocalStorage("readAnnouncements")[getTodayDate()].includes(x) == false) {
+            if (getLocalStorage("readAnnouncements")[getTodayDate()].includes(x) == false && x == getTodayDate()) {
                 if (dataStorage.announcements[y][x].uid != getLocalStorage("userId")) {
                     let annRed = redDot(div, "90%", "10%")
                     announcementsRedDotList[x] = annRed;
@@ -1361,7 +1497,7 @@ document.getElementById("staffProfileSearch").oninput = function() {
 }
 
 // Handle Database Updates
-onDataUpdate(`FUT/${getTodayDate()}`, function(res) {
+/* onDataUpdate(`FUT/${getTodayDate()}`, function(res) {
     if (res != undefined && res != null) {
         dataStorage.FUT[getTodayDate()] = res;
     } else {
@@ -1388,6 +1524,39 @@ onDataUpdate(`FUT/${getTodayDate()}`, function(res) {
                     }
                     if (FUTRedDot == undefined) {
                         FUTRedDot = redDot(document.getElementById("First Unit Test Btn"), `0%`, `0%`)
+                    }
+                }
+            }
+        }
+    }
+}) */
+onDataUpdate(`T1/${getTodayDate()}`, function(res) {
+    if (res != undefined && res != null) {
+        dataStorage.T1[getTodayDate()] = res;
+    } else {
+        dataStorage.T1 = {}
+        setLocalStorage("readT1", {[getTodayDate()]: []});
+        for (let g of Object.keys(T1RedDotList)) {
+            T1RedDotList[g].remove()
+            delete T1RedDotList[g]
+        }
+        if (T1RedDot != undefined) {
+            T1RedDot.remove();
+            T1RedDot = undefined;
+        }
+        removeMenuRedDot();
+    }
+    if (getScreen() != null && getScreen().id == "Term 1") {
+        loadT1()
+    } else {
+        if (res != undefined && res != null) {
+            for (let t of Object.keys(res)) {
+                if (getLocalStorage("readT1")[getTodayDate()].includes(t) == false) {
+                    if (menuRedDot == undefined) {
+                        menuRedDot = redDot(document.getElementById("navBtn"), `0%`, `0%`);
+                    }
+                    if (T1RedDot == undefined) {
+                        T1RedDot = redDot(document.getElementById("Term 1 Btn"), `0%`, `0%`)
                     }
                 }
             }
