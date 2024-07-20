@@ -486,7 +486,7 @@ var navList = [
     { label: "About School", logo: "./assets/home.svg" },
     { label: "Class Attendance", logo: "./assets/attendance.svg" },
     // { label: "First Unit Test", logo: "./assets/report.svg" },
-    { label: "Term 1", logo: "./assets/report.svg" },
+    // { label: "Term 1", logo: "./assets/report.svg" },
     { label: "Announcements", logo: "./assets/announcement.svg" },
     { label: "Casual Leave", logo: "./assets/sandglass.svg" },
     { label: "In Campus Leave", logo: "./assets/sandglass.svg" },
